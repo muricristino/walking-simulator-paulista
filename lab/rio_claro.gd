@@ -90,6 +90,9 @@ func _ready() -> void:
 	cr.material = sm
 	cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cl.add_child(cr)
+	if args.has("--walkcheck"):
+		_walkcheck()
+		return
 	var shot := args.find("--shot")
 	if shot >= 0 and shot + 1 < args.size():
 		label.visible = false
@@ -355,6 +358,36 @@ func _process(dt: float) -> void:
 		var f := -cam.global_basis.z
 		f.y = 0.0
 		cam.position += f.normalized() * move * dt * 12.0
+
+
+func _walkcheck() -> void:
+	for f in 3:
+		await get_tree().physics_frame
+	var space := world.get_world_3d().direct_space_state
+	var q := PhysicsShapeQueryParameters3D.new()
+	var sh := CylinderShape3D.new()
+	sh.radius = 0.3
+	sh.height = 1.4
+	q.shape = sh
+	q.collision_mask = 1
+	var bad := 0
+	var total := 0
+	for p in get_tree().get_nodes_in_group("rc_walk"):
+		var c: Curve3D = p.curve
+		var L := c.get_baked_length()
+		var d := 0.0
+		while d <= L:
+			var v := c.sample_baked(d)
+			q.transform = Transform3D(Basis.IDENTITY, v + Vector3(0, 0.9, 0))
+			total += 1
+			var hit := space.intersect_shape(q, 1)
+			if not hit.is_empty():
+				bad += 1
+				print("WALK_BLOCKED %s %.1f %s %s" % [p.name, d, v, hit[0].collider.get_parent().name])
+			d += 0.5
+	var spots := get_tree().get_nodes_in_group("parked_spot")
+	print("WALK_SAMPLES %d BLOCKED %d PATHS %d SPOTS %d" % [total, bad, get_tree().get_nodes_in_group("rc_walk").size(), spots.size()])
+	get_tree().quit()
 
 
 func _shot(path: String) -> void:

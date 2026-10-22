@@ -4,6 +4,7 @@ const Tex := preload("res://scripts/tex.gd")
 const Geo := preload("res://scripts/geo.gd")
 const Player := preload("res://scripts/player.gd")
 const Autowalk := preload("res://scripts/autowalk.gd")
+const People := preload("res://scripts/people.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(640, 480)
 const CROSS := [-150.0, -380.0, -560.0]
@@ -20,6 +21,8 @@ var floors: StaticBody3D
 var player: CharacterBody3D
 var movers := []
 var walkers := []
+var people := People.new()
+var ped_pool := []
 
 
 func _ready() -> void:
@@ -569,47 +572,44 @@ func _moving_car(x: float, z: float, v: float) -> void:
 	movers.append({"node": body, "v": v, "z0": -420.0, "z1": 50.0})
 
 
+func _ped_seed() -> int:
+	if ped_pool.is_empty():
+		for i in 20:
+			ped_pool.append(1000 + i * 37)
+	return ped_pool[rng.randi() % ped_pool.size()]
+
+
 func _walker(x: float, z: float, dir: float) -> void:
-	var sk := _cmat("skin", skin, rng.randi() % skin.size())
-	var sh := _cmat("shirt", shirts, rng.randi() % shirts.size())
-	var lg := _cmat("shirt", shirts, [1, 3, 6][rng.randi() % 3])
-	var hs := rng.randf_range(0.92, 1.08)
+	var r := people.rig(_ped_seed())
+	var hs: float = r.body.scale.y
 	var body := AnimatableBody3D.new()
 	body.collision_layer = 1
 	body.collision_mask = 0
 	body.sync_to_physics = false
 	var cs := CollisionShape3D.new()
 	var b := BoxShape3D.new()
-	b.size = Vector3(0.5, 1.7 * hs, 0.34)
+	b.size = Vector3(0.5, 1.75 * hs, 0.34)
 	cs.shape = b
-	cs.position = Vector3(0, 0.85 * hs, 0)
+	cs.position = Vector3(0, 0.875 * hs, 0)
 	body.add_child(cs)
-	var top := Node3D.new()
-	body.add_child(top)
-	top.add_child(_part(M[sh], Vector3(0.48, 0.62 * hs, 0.28), Vector3(0, 1.12 * hs, 0)))
-	top.add_child(_part(M[sk], Vector3(0.22, 0.26, 0.22), Vector3(0, 1.57 * hs, 0)))
-	var legs := []
-	for side in [-0.1, 0.1]:
-		var hip := Node3D.new()
-		hip.position = Vector3(side, 0.84 * hs, 0)
-		hip.add_child(_part(M[lg], Vector3(0.17, 0.84 * hs, 0.22), Vector3(0, -0.42 * hs, 0)))
-		body.add_child(hip)
-		legs.append(hip)
+	body.add_child(r.root)
 	body.position = Vector3(x, 0.15, z)
 	body.rotation.y = 0.0 if dir < 0.0 else PI
 	world.add_child(body)
-	walkers.append({"node": body, "top": top, "legs": legs, "dir": dir, "speed": rng.randf_range(1.1, 1.5), "phase": rng.randf() * TAU, "v": 0.0})
+	walkers.append({"node": body, "rig": r, "dir": dir, "speed": rng.randf_range(1.1, 1.5), "phase": rng.randf() * TAU, "v": 0.0})
 
 
-func _part(m: Material, size: Vector3, pos: Vector3) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = size
-	mi.mesh = bm
-	mi.material_override = m
-	mi.position = pos
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	return mi
+func _bake(node: Node3D, xf: Transform3D) -> void:
+	for c in node.get_children():
+		var cx: Transform3D = xf * (c as Node3D).transform
+		if c is MeshInstance3D:
+			var m: Mesh = c.mesh
+			var mt: Material = m.surface_get_material(0)
+			var key := "ped%d" % mt.get_instance_id()
+			if not geo.mats.has(key):
+				geo.add_mat(key, mt)
+			geo.append(key, m, cx)
+		_bake(c, cx)
 
 
 func _physics_process(dt: float) -> void:
@@ -640,10 +640,7 @@ func _walk(w: Dictionary, dt: float) -> void:
 		n.rotation.y = 0.0
 	n.position = Vector3(n.position.x, 0.0 if _in_cross(z, z) else 0.15, z)
 	w.phase += w.v * dt * PI / 0.65
-	var a: float = sin(w.phase) * 0.45 * clampf(w.v / 0.8, 0.0, 1.0)
-	w.legs[0].rotation.x = a
-	w.legs[1].rotation.x = -a
-	w.top.position.y = absf(cos(w.phase)) * 0.03 * clampf(w.v, 0.0, 1.0)
+	people.pose(w.rig, w.phase, clampf(w.v / 0.8, 0.0, 1.0))
 
 
 func _traffic() -> void:
@@ -666,27 +663,16 @@ func _traffic() -> void:
 	_bus(-14.25, -200.0, true)
 
 
-var skin := [Color(0.85, 0.65, 0.5), Color(0.62, 0.42, 0.3), Color(0.42, 0.28, 0.2), Color(0.75, 0.55, 0.42)]
-var shirts := [Color(0.7, 0.15, 0.12), Color(0.15, 0.2, 0.4), Color(0.85, 0.85, 0.8), Color(0.1, 0.1, 0.1), Color(0.75, 0.6, 0.2), Color(0.25, 0.45, 0.3), Color(0.45, 0.45, 0.48)]
-
-
-func _cmat(prefix: String, list: Array, i: int) -> String:
-	var key := "%s%d" % [prefix, i]
-	if not M.has(key):
-		M[key] = mat(Tex.flat(list[i], 4, 0.03, 0.1, 60 + i))
-		geo.add_mat(key, M[key])
-	return key
-
-
 func _person(p: Vector3) -> void:
-	var sk := _cmat("skin", skin, rng.randi() % skin.size())
-	var sh := _cmat("shirt", shirts, rng.randi() % shirts.size())
-	var lg := _cmat("shirt", shirts, [1, 3, 6][rng.randi() % 3])
-	var hs := rng.randf_range(0.92, 1.08)
-	geo.box(lg, p + Vector3(0, 0.42 * hs, 0), Vector3(0.38, 0.84 * hs, 0.24), Vector2(1, 1))
-	geo.box(sh, p + Vector3(0, 1.12 * hs, 0), Vector3(0.48, 0.62 * hs, 0.28), Vector2(1, 1))
-	geo.box(sk, p + Vector3(0, 1.57 * hs, 0), Vector3(0.22, 0.26, 0.22), Vector2(1, 1))
-	solid(p + Vector3(0, 0.85 * hs, 0), Vector3(0.5, 1.7 * hs, 0.32))
+	var r := people.rig(_ped_seed())
+	var hs: float = r.body.scale.y
+	people.pose(r, 0.0, 0.0)
+	var sh: Array = r.shoulders
+	sh[0].rotation.z = -rng.randf_range(0.04, 0.14)
+	sh[1].rotation.z = rng.randf_range(0.04, 0.14)
+	_bake(r.root, Transform3D(Basis(Vector3.UP, rng.randf() * TAU), p))
+	r.root.free()
+	solid(p + Vector3(0, 0.875 * hs, 0), Vector3(0.5, 1.75 * hs, 0.32))
 
 
 func _people() -> void:
@@ -712,7 +698,14 @@ func _camera() -> void:
 	player = Player.new()
 	player.auto = args.has("--autowalk") or args.has("--shot")
 	world.add_child(player)
-	player.setup(Vector3(21.5, 0.15, -12.0), Vector3(-14.0, 9.0, -100.0))
+	var feet := Vector3(21.5, 0.15, -12.0)
+	var target := Vector3(-14.0, 9.0, -100.0)
+	var at := args.find("--at")
+	if at >= 0 and at + 1 < args.size():
+		var f := args[at + 1].split_floats(",")
+		feet = Vector3(f[0], 0.15, f[1])
+		target = Vector3(f[2], f[3], f[4])
+	player.setup(feet, target)
 	player.capture(true)
 	var i := args.find("--autowalk")
 	if i >= 0 and i + 1 < args.size():

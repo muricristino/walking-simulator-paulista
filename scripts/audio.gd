@@ -404,7 +404,8 @@ func _on_player_bumped(body: Variant = null, speed: Variant = null) -> void:
 		var id: int = (body as Node3D).get_instance_id()
 		if tracked.has(id):
 			tracked[id].hcd = 4.0
-	play_at(S.get("horn"), pos, 0.0, &"SFX", 10.0, 300.0)
+	if not (external_honk and body is Node and (body as Node).has_meta("mover")):
+		play_at(S.get("horn"), pos, 0.0, &"SFX", 10.0, 300.0)
 	if v > 3.0:
 		play_at(S.get("sfx_brake_squeal"), pos, -8.0, &"SFX", 5.0, 90.0)
 	_count("bumped")

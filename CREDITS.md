@@ -81,3 +81,8 @@
 - Source: https://sunfl0w.itch.io/german-psx-car
 - License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
 - Used: GermanCar.fbx, GermanCarTexture.png
+
+## UI fonts (assets/ui)
+- Press Start 2P by CodeMan38 (https://fonts.google.com/specimen/Press+Start+2P), SIL Open Font License 1.1 (assets/ui/OFL-PressStart2P.txt). Used: title
+- Silkscreen by Jason Kottke (https://fonts.google.com/specimen/Silkscreen), SIL Open Font License 1.1 (assets/ui/OFL-Silkscreen.txt). Used: buttons, compass, labels
+- VT323 by Peter Hull (https://fonts.google.com/specimen/VT323), SIL Open Font License 1.1 (assets/ui/OFL-VT323.txt). Used: body text

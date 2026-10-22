@@ -6,6 +6,7 @@ const Player := preload("res://scripts/player.gd")
 const Autowalk := preload("res://scripts/autowalk.gd")
 const People := preload("res://scripts/people.gd")
 const Katcho := preload("res://scripts/katcho.gd")
+const Props := preload("res://scripts/props.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(640, 480)
 const CROSS := [-150.0, -380.0, -560.0]
@@ -25,6 +26,7 @@ var movers := []
 var walkers := []
 var people := People.new()
 var katcho := Katcho.new()
+var props := Props.new()
 var ped_vars := []
 var statics := []
 var placed := []
@@ -287,6 +289,10 @@ func _building(cx: float, cz: float, w: float, d: float, h: float, antenna: bool
 	solid(Vector3(cx, h * 0.5, cz), Vector3(w, h, d))
 	if rng.randf() < 0.5:
 		geo.box("roof", Vector3(cx + rng.randf_range(-w, w) * 0.2, h + 2.5, cz + rng.randf_range(-d, d) * 0.2), Vector3(w * 0.4, 5.0, d * 0.4), Vector2(4, 4))
+	var face := cx - signf(cx) * w * 0.5
+	if absf(face) < 34.0 and d > 12.0:
+		var shop := props.shopfront(Vector3.ZERO, d - 1.0, false, bld_count)
+		_place(shop, Transform3D(Basis(Vector3.UP, -signf(cx) * PI * 0.5), Vector3(face + signf(cx) * -0.02, 0.15, cz)))
 	if antenna:
 		_antenna(Vector3(cx + rng.randf_range(-w, w) * 0.25, h, cz + rng.randf_range(-d, d) * 0.25), rng.randf_range(22, 50), rng.randf() < 0.35)
 
@@ -409,46 +415,51 @@ func _trianon() -> void:
 
 
 func _tree(p: Vector3, s: float) -> void:
-	var trunk_h := 3.2 * s
-	geo.box("trunk", p + Vector3(0, trunk_h * 0.5, 0), Vector3(0.35, trunk_h, 0.35) * Vector3(s, 1, s), Vector2(1, 2))
-	solid(p + Vector3(0, trunk_h * 0.5, 0), Vector3(0.4 * s, trunk_h, 0.4 * s))
-	var leaf: String = "leaf%d" % (rng.randi() % 3)
-	for k in 3:
-		var sm := SphereMesh.new()
-		var r := rng.randf_range(1.6, 2.4) * s
-		sm.radius = r
-		sm.height = r * rng.randf_range(1.3, 1.8)
-		sm.radial_segments = 6
-		sm.rings = 3
-		var mi := MeshInstance3D.new()
-		mi.mesh = sm
-		mi.material_override = M[leaf]
-		mi.position = p + Vector3(rng.randf_range(-1, 1) * s, trunk_h + rng.randf_range(0.2, 1.6) * s, rng.randf_range(-1, 1) * s)
-		mi.rotation.y = rng.randf() * TAU
-		world.add_child(mi)
+	var trunk_h := 2.8 * s
+	solid(p + Vector3(0, trunk_h * 0.5, 0), Vector3(0.45 * s, trunk_h, 0.45 * s))
+	_place(props.tree(p, s * 0.85, rng.randi()), Transform3D.IDENTITY)
+
+
+func _bake(node: Node3D, xf: Transform3D) -> void:
+	for c in node.get_children():
+		if not c is Node3D:
+			continue
+		var cx: Transform3D = xf * (c as Node3D).transform
+		if c is MeshInstance3D and (c as MeshInstance3D).mesh:
+			var mi := c as MeshInstance3D
+			for si in mi.mesh.get_surface_count():
+				var mt: Material = mi.material_override
+				if mt == null:
+					mt = mi.get_surface_override_material(si)
+				if mt == null:
+					mt = mi.mesh.surface_get_material(si)
+				var key := "prop%d_%d" % [mt.get_instance_id(), si]
+				if not geo.mats.has(key):
+					geo.add_mat(key, mt)
+				geo.tools_append(key, mi.mesh, si, cx)
+		_bake(c, cx)
+
+
+func _place(n: Node3D, xf: Transform3D) -> void:
+	_bake(n, xf * n.transform)
+	n.free()
 
 
 func _lamp_post(x: float, z: float, light: bool) -> void:
 	var sx := signf(x)
-	geo.box("metal", Vector3(x, 5.0, z), Vector3(0.25, 10.0, 0.25), Vector2(1, 4))
-	solid(Vector3(x, 5.0, z), Vector3(0.3, 10.0, 0.3))
-	geo.box("metal", Vector3(x - sx * 1.6, 9.9, z), Vector3(3.2, 0.18, 0.18), Vector2(1, 1))
-	geo.box("lamp", Vector3(x - sx * 3.0, 9.75, z), Vector3(0.9, 0.22, 0.4), Vector2(1, 1))
-	geo.box("metal", Vector3(x + sx * 0.8, 6.4, z), Vector3(1.6, 0.14, 0.14), Vector2(1, 1))
-	geo.box("lamp", Vector3(x + sx * 1.5, 6.25, z), Vector3(0.6, 0.18, 0.3), Vector2(1, 1))
+	solid(Vector3(x, 3.75, z), Vector3(0.35, 7.5, 0.35))
+	var lp := props.lamp()
+	_place(lp, Transform3D(Basis(Vector3.UP, -sx * PI * 0.5), Vector3(x, 0.15, z)))
+	if rng.randf() < 0.5:
+		var tc := props.trash()
+		_place(tc, Transform3D(Basis(), Vector3(x + sx * 0.6, 0.15, z + 0.9)))
+		solid(Vector3(x + sx * 0.6, 0.6, z + 0.9), Vector3(0.5, 1.0, 0.5))
 	if light:
-		var sl := OmniLight3D.new()
-		sl.position = Vector3(x + sx * 1.5, 5.8, z)
-		sl.light_color = Color(1.0, 0.72, 0.42)
-		sl.light_energy = 4.0
-		sl.omni_range = 11.0
-		sl.omni_attenuation = 0.9
-		world.add_child(sl)
 		var ol := OmniLight3D.new()
-		ol.position = Vector3(x - sx * 3.0, 9.0, z)
-		ol.light_color = Color(1.0, 0.68, 0.38)
-		ol.light_energy = 9.0
-		ol.omni_range = 16.0
+		ol.position = Vector3(x, 7.0, z)
+		ol.light_color = Color(1.0, 0.66, 0.36)
+		ol.light_energy = 10.0
+		ol.omni_range = 17.0
 		ol.omni_attenuation = 0.9
 		world.add_child(ol)
 
@@ -488,12 +499,11 @@ func _furniture() -> void:
 	_signal(16.6, CROSS[0] + 10.0, 1.0, false)
 	_signal(-16.6, CROSS[0] - 10.0, -1.0, false)
 	if M.has("placa"):
-		geo.box("metal", Vector3(19.0, 1.8, -26.0), Vector3(0.1, 3.6, 0.1), Vector2(1, 1))
 		solid(Vector3(19.0, 1.8, -26.0), Vector3(0.15, 3.6, 0.15))
-		geo.quad("placa", Vector3(17.7, 2.9, -25.95), Vector3(20.3, 2.9, -25.95), Vector3(20.3, 3.6, -25.95), Vector3(17.7, 3.6, -25.95), Vector3.BACK, Vector2(2.6, 0.7))
+		_place(props.street_sign(Vector3(19.0, 0.15, -26.0)), Transform3D.IDENTITY)
 	_banca(Vector3(26.5, 0.15, -36.0))
 	for k in 6:
-		geo.box("dark", Vector3(-23.0, 0.6, -20.0 - k * 7.0), Vector3(0.6, 0.9, 1.8), Vector2(1, 1))
+		_place(props.bench(), Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-23.0, 0.15, -20.0 - k * 7.0)))
 		solid(Vector3(-23.0, 0.6, -20.0 - k * 7.0), Vector3(0.6, 0.9, 1.8))
 
 

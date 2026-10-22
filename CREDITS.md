@@ -48,3 +48,11 @@
 - Street, cross streets, buildings and points of interest: © OpenStreetMap contributors, ODbL 1.0, via Overpass API, converted by tools/osm_rioclaro.py
 - Elevation: Mapzen/AWS Terrain Tiles (terrarium, zoom 15, https://registry.opendata.aws/terrain-tiles/), derived from SRTM and other public sources; see https://github.com/tilezen/joerd/blob/master/docs/attribution.md
 - art/placa_rioclaro.png: drawn locally in the style of the São Paulo street sign
+
+## Alameda Rio Claro models (assets/rioclaro)
+- Modeled in Blender by tools/blender/rc_calcadao.py and tools/blender/rc_rua.py, positioned on the OpenStreetMap footprints above (© OpenStreetMap contributors, ODbL 1.0); shapes and materials eyeballed from street-level photos, which are not used as textures
+- Street relief: terrain tiles above, smoothed by tools/rc_relief.py
+- tex/*.png: painted procedurally by tools/blender/rc_textures.py (herringbone pavers, wood deck, copper slats, granite, glass, panels, concrete, fences, graffiti wall, casarão facade, roof tiles, residential facades, cars, leaves, plane-tree bark), except:
+  - asphalt.png: copy of assets/road/b_128.png (ambientCG Asphalt019, CC0 1.0)
+  - bark.png: copy of assets/props/bark.png (ambientCG Bark004, CC0 1.0)
+  - bark_ficus.png: ambientCG Bark012 (https://ambientcg.com/view?id=Bark012), CC0 1.0, downscaled and darkened

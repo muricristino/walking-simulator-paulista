@@ -52,12 +52,12 @@
 
 ## Alameda Rio Claro (assets/osm/rioclaro.json)
 - Street, cross streets, buildings and points of interest: © OpenStreetMap contributors, ODbL 1.0, via Overpass API, converted by tools/osm_rioclaro.py
-- Elevation: Mapzen/AWS Terrain Tiles (terrarium, zoom 15, https://registry.opendata.aws/terrain-tiles/), derived from SRTM and other public sources; see https://github.com/tilezen/joerd/blob/master/docs/attribution.md
+- Elevation: GeoSampa, Prefeitura de São Paulo (https://geosampa.prefeitura.sp.gov.br), 1 m contour lines (curva_intermediaria, curva_mestra) and spot heights (ponto_cotado), fetched from the GeoSampa WFS and converted by tools/rc_geosampa.py; municipal open data, used with attribution
 - art/placa_rioclaro.png: drawn locally in the style of the São Paulo street sign
 
 ## Alameda Rio Claro models (assets/rioclaro)
 - Modeled in Blender by tools/blender/rc_calcadao.py and tools/blender/rc_rua.py, positioned on the OpenStreetMap footprints above (© OpenStreetMap contributors, ODbL 1.0); shapes and materials eyeballed from street-level photos, which are not used as textures
-- Street relief: terrain tiles above, smoothed by tools/rc_relief.py
+- Street relief: GeoSampa contours above, sampled along the street by tools/rc_geosampa.py
 - tex/*.png: painted procedurally by tools/blender/rc_textures.py (herringbone pavers, wood deck, copper slats, granite, glass, panels, concrete, fences, graffiti wall, casarão facade, roof tiles, residential facades, cars, leaves, plane-tree bark), except:
   - asphalt.png: copy of assets/road/b_128.png (ambientCG Asphalt019, CC0 1.0)
   - bark.png: copy of assets/props/bark.png (ambientCG Bark004, CC0 1.0)
@@ -86,3 +86,7 @@
 - Press Start 2P by CodeMan38 (https://fonts.google.com/specimen/Press+Start+2P), SIL Open Font License 1.1 (assets/ui/OFL-PressStart2P.txt). Used: title
 - Silkscreen by Jason Kottke (https://fonts.google.com/specimen/Silkscreen), SIL Open Font License 1.1 (assets/ui/OFL-Silkscreen.txt). Used: buttons, compass, labels
 - VT323 by Peter Hull (https://fonts.google.com/specimen/VT323), SIL Open Font License 1.1 (assets/ui/OFL-VT323.txt). Used: body text
+
+## Audio (assets/audio)
+- Ambience, traffic, footsteps, birds, horns and UI sounds: CC0 1.0 packs from Kenney, OpenGameArt (IgnasD, Thimras, isaiah658, StarNinjas, GGBotNet, WuxiaScrub) and sounds synthesized for this project (CC0)
+- Full per-file list and processing in assets/audio/CREDITS.md; rebuilt by tools/audio_build.py

@@ -8,6 +8,7 @@ const People := preload("res://scripts/people.gd")
 const Katcho := preload("res://scripts/katcho.gd")
 const Props := preload("res://scripts/props.gd")
 const OsmCity := preload("res://scripts/osm_city.gd")
+const RioClaro := preload("res://scripts/rio_claro.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(640, 480)
 const CROSS := [-150.0, -380.0, -560.0]
@@ -29,6 +30,10 @@ var katcho := Katcho.new()
 var props := Props.new()
 var ped_vars := []
 var statics := []
+var rio: RefCounted
+var goal_label: Label
+var goal_done := false
+var goal_t := 0.0
 var placed := []
 var lod_t := 0.0
 
@@ -58,7 +63,7 @@ func _ready() -> void:
 	floors.collision_layer = 2
 	floors.collision_mask = 0
 	world.add_child(floors)
-	solid(Vector3(0, -0.5, -350), Vector3(400, 1, 900), true)
+	solid(Vector3(65, -0.5, -350), Vector3(270, 1, 900), true)
 	geo = Geo.new()
 	_materials()
 	_environment()
@@ -73,6 +78,7 @@ func _ready() -> void:
 	_bounds()
 	_camera()
 	_screen()
+	_hud()
 	_maybe_shot()
 
 
@@ -188,7 +194,11 @@ func _bounds() -> void:
 	var m1 := MASP_Z.y + 6.0
 	solid(Vector3(31.5, h * 0.5, (zf + zb) * 0.5), Vector3(1, h, zf - zb))
 	solid(Vector3(-31.5, h * 0.5, (zf + m1) * 0.5), Vector3(1, h, zf - m1))
-	solid(Vector3(-31.5, h * 0.5, (m0 + zb) * 0.5), Vector3(1, h, m0 - zb))
+	solid(Vector3(-31.5, h * 0.5, (m0 - 326.0) * 0.5), Vector3(1, h, m0 + 326.0))
+	solid(Vector3(-31.5, h * 0.5, (-348.0 + zb) * 0.5), Vector3(1, h, -348.0 - zb))
+	solid(Vector3(-296.0, h * 0.5, -448.0), Vector3(530, h, 1))
+	solid(Vector3(-296.0, h * 0.5, -168.0), Vector3(530, h, 1))
+	solid(Vector3(-560.0, h * 0.5, -308.0), Vector3(1, h, 280))
 	solid(Vector3(-62.5, h * 0.5, (m0 + m1) * 0.5), Vector3(1, h, m1 - m0))
 	solid(Vector3(-47.0, h * 0.5, m1 + 0.5), Vector3(31, h, 1))
 	solid(Vector3(-47.0, h * 0.5, m0 - 0.5), Vector3(31, h, 1))
@@ -265,11 +275,15 @@ func _raised(key: String, xa: float, xb: float, z0: float, z1: float, h: float, 
 
 
 func _buildings() -> void:
-	for sx in [-1.0, 1.0]:
-		var xa: float = sx * 30.0
-		var xb: float = sx * 260.0
-		geo.ground("slab", minf(xa, xb), maxf(xa, xb), -820.0, 120.0, 0.05, Vector2(4, 4), 40.0)
+	geo.ground("slab", 30.0, 260.0, -820.0, 120.0, 0.05, Vector2(4, 4), 40.0)
+	geo.ground("slab", -260.0, -30.0, -820.0, -450.0, 0.05, Vector2(4, 4), 40.0)
+	geo.ground("slab", -260.0, -30.0, -170.0, 120.0, 0.05, Vector2(4, 4), 40.0)
+	geo.ground("slab", -34.0, -30.0, -450.0, -170.0, 0.05, Vector2(4, 4), 40.0)
+	solid(Vector3(-50.0, -0.5, -500.0), Vector3(40, 1, 400), true)
+	rio = RioClaro.new()
+	rio.build(world, 34.0)
 	var osm := OsmCity.new()
+	osm.corridors = [rio.corridor()]
 	osm.zrange = Vector2(-760.0, 70.0)
 	for c in CROSS:
 		osm.gaps.append(Vector2(c, 11.0))
@@ -530,6 +544,7 @@ func _physics_process(dt: float) -> void:
 		n.position.z = z
 	for w in walkers:
 		_walk(w, dt)
+	_check_goal(dt)
 	lod_t -= dt
 	if lod_t <= 0.0 and player:
 		lod_t = 0.4
@@ -642,6 +657,38 @@ func _camera() -> void:
 		aw.out = args[i + 1]
 		DirAccess.make_dir_recursive_absolute(aw.out)
 		add_child(aw)
+
+
+func _hud() -> void:
+	var cl := CanvasLayer.new()
+	add_child(cl)
+	goal_label = Label.new()
+	goal_label.text = "Objetivo: chegar à Alameda Rio Claro"
+	goal_label.add_theme_font_size_override("font_size", 26)
+	goal_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.6))
+	goal_label.add_theme_color_override("font_outline_color", Color(0.08, 0.04, 0.02))
+	goal_label.add_theme_constant_override("outline_size", 6)
+	goal_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	goal_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	goal_label.position = Vector2(-300, 14)
+	goal_label.size = Vector2(600, 40)
+	cl.add_child(goal_label)
+
+
+func _check_goal(dt: float) -> void:
+	if not player or not goal_label:
+		return
+	var p := player.global_position
+	if not goal_done and p.x < -38.0 and absf(p.z + 337.0) < 30.0:
+		goal_done = true
+		goal_t = 6.0
+		goal_label.text = "Você chegou à Alameda Rio Claro!"
+		goal_label.add_theme_font_size_override("font_size", 40)
+	if goal_done and goal_t > 0.0:
+		goal_t -= dt
+		if goal_t <= 0.0:
+			goal_label.text = "Alameda Rio Claro"
+			goal_label.add_theme_font_size_override("font_size", 22)
 
 
 func _screen() -> void:

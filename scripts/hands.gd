@@ -13,6 +13,15 @@ var t := 0.0
 var phone := 0.0
 var phone_on := false
 var lag := Vector2.ZERO
+var custom_screen: Texture2D
+var screen_img: Image
+var screen_tex: ImageTexture
+var screen_t := 0.0
+var phone_target := Vector3(-42.0, 0.0, -337.0)
+var phone_target_on := true
+var rest := Vector3(0.22, -0.29, -0.46)
+var aim := Vector2(0.05, 0.45)
+var turn := -20.0
 
 
 func _ready() -> void:
@@ -55,35 +64,122 @@ func _ribs(a: Color, b: Color) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
+const DIGITS := [31599, 11415, 29671, 29647, 23497, 31183, 31215, 29257, 31727, 31695]
+const SW := 24
+const SH := 50
+
+
 func _screen_tex() -> ImageTexture:
-	var w := 14
-	var h := 28
-	var img := Image.create(w, h, false, Image.FORMAT_RGB8)
-	var top := Color(0.2, 0.12, 0.42)
-	var bot := Color(0.95, 0.45, 0.3)
-	for y in h:
-		for x in w:
-			img.set_pixel(x, y, top.lerp(bot, float(y) / h))
-	for x in range(4, 10):
-		for y in range(3, 6):
-			if not (y == 4 and x == 7):
-				img.set_pixel(x, y, Color(1, 1, 0.95))
-	var icons := [Color(0.3, 0.8, 0.4), Color(0.2, 0.55, 0.95), Color(0.95, 0.8, 0.2), Color(0.95, 0.3, 0.35), Color(0.75, 0.75, 0.8), Color(0.55, 0.3, 0.9)]
-	var k := 0
-	for row in 3:
+	screen_img = Image.create(SW, SH, false, Image.FORMAT_RGB8)
+	screen_tex = ImageTexture.create_from_image(screen_img)
+	_screen_draw()
+	return screen_tex
+
+
+func _px(x: int, y: int, c: Color) -> void:
+	if x >= 0 and y >= 0 and x < SW and y < SH:
+		screen_img.set_pixel(x, y, c)
+
+
+func _glyph(bits: int, x: int, y: int, c: Color) -> void:
+	for r in 5:
 		for col in 3:
-			var c: Color = icons[k % icons.size()]
-			k += 1
-			for yy in 2:
-				for xx in 2:
-					img.set_pixel(2 + col * 4 + xx, 9 + row * 4 + yy, c)
-	for x in range(1, w - 1):
-		for y in range(23, 26):
-			img.set_pixel(x, y, Color(0.12, 0.1, 0.16))
-	for col in 3:
-		for xx in 2:
-			img.set_pixel(3 + col * 4 + xx, 24, icons[col])
-	return ImageTexture.create_from_image(img)
+			if bits & (1 << (14 - (r * 3 + col))):
+				_px(x + col, y + r, c)
+
+
+func _text_w(s: String) -> int:
+	return s.length() * 4 - 1 + s.count("m") * 2
+
+
+func _text(s: String, x: int, y: int, c: Color) -> void:
+	for ch in s:
+		if ch >= "0" and ch <= "9":
+			_glyph(DIGITS[ch.unicode_at(0) - 48], x, y, c)
+		elif ch == ":":
+			_px(x + 1, y + 1, c)
+			_px(x + 1, y + 3, c)
+		elif ch == "m":
+			for r in range(1, 5):
+				_px(x, y + r, c)
+				_px(x + 2, y + r, c)
+				_px(x + 4, y + r, c)
+			_px(x + 1, y + 1, c)
+			_px(x + 3, y + 1, c)
+			x += 2
+		elif ch == "k":
+			_glyph(19373, x, y, c)
+		elif ch == ".":
+			_px(x + 1, y + 4, c)
+		x += 4
+
+
+func _screen_draw() -> void:
+	var top := Color(0.08, 0.1, 0.22)
+	var bot := Color(0.16, 0.2, 0.36)
+	for y in SH:
+		var c := top.lerp(bot, float(y) / SH)
+		for x in SW:
+			screen_img.set_pixel(x, y, c)
+	var tm := Time.get_time_dict_from_system()
+	var clock := "%02d:%02d" % [tm.hour, tm.minute]
+	_text(clock, (SW - _text_w(clock)) / 2, 2, Color(0.95, 0.95, 1.0))
+	for x in range(2, SW - 2):
+		_px(x, 9, Color(0.3, 0.34, 0.5))
+	var cam := get_parent() as Node3D
+	if not cam or not cam.is_inside_tree() or not phone_target_on:
+		return
+	var p := cam.global_position
+	var to := phone_target - p
+	to.y = 0.0
+	var dist := to.length()
+	var cx := SW / 2
+	var cy := 23
+	var ring := Color(0.42, 0.48, 0.66)
+	for i in 48:
+		var a := TAU * i / 48.0
+		_px(cx + roundi(cos(a) * 9.0), cy + roundi(sin(a) * 9.0), ring)
+	var fwd := -cam.global_basis.z
+	fwd.y = 0.0
+	var yaw := atan2(fwd.x, -fwd.z)
+	var nx := sin(-yaw)
+	var ny := -cos(-yaw)
+	_px(cx + roundi(nx * 9.0), cy + roundi(ny * 9.0), Color(0.95, 0.3, 0.3))
+	_px(cx + roundi(nx * 8.0), cy + roundi(ny * 8.0), Color(0.95, 0.3, 0.3))
+	if dist < 15.0:
+		var ok := Color(0.4, 0.95, 0.5)
+		for q in [Vector2i(-4, 0), Vector2i(-3, 1), Vector2i(-2, 2), Vector2i(-1, 3), Vector2i(0, 2), Vector2i(1, 1), Vector2i(2, 0), Vector2i(3, -1), Vector2i(4, -2), Vector2i(5, -3)]:
+			_px(cx + q.x, cy + q.y, ok)
+			_px(cx + q.x, cy + q.y + 1, ok)
+	else:
+		var ang := atan2(to.x, -to.z) - yaw
+		var dir := Vector2(sin(ang), -cos(ang))
+		var arrow := Color(1.0, 0.78, 0.25)
+		for i in 15:
+			var f := -6.0 + i * 0.95
+			_px(cx + roundi(dir.x * f), cy + roundi(dir.y * f), arrow)
+		var side := Vector2(-dir.y, dir.x)
+		for i in 5:
+			var b := dir * (7.0 - i) + side * i * 0.8
+			var b2 := dir * (7.0 - i) - side * i * 0.8
+			_px(cx + roundi(b.x), cy + roundi(b.y), arrow)
+			_px(cx + roundi(b2.x), cy + roundi(b2.y), arrow)
+	var label := "%dm" % roundi(dist) if dist < 1000.0 else "%.1fk" % (dist / 1000.0)
+	_text(label, (SW - _text_w(label)) / 2, 37, Color(1, 1, 1))
+	var pin := Color(0.95, 0.35, 0.4)
+	for q in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(0, 1), Vector2i(0, 2)]:
+		_px(cx + q.x, 45 + q.y, pin)
+
+
+func _screen_update(dt: float) -> void:
+	if custom_screen:
+		return
+	screen_t -= dt
+	if screen_t > 0.0:
+		return
+	screen_t = 0.1
+	_screen_draw()
+	screen_tex.update(screen_img)
 
 
 func _obox(g: Geo, key: String, a: Vector3, b: Vector3, w0: float, t0: float, w1: float, t1: float, side := Vector3.RIGHT) -> void:
@@ -128,27 +224,34 @@ func _sleeve(g: Geo, elbow: Vector3, wrist: Vector3, side: Vector3, m: float) ->
 func _relaxed(m: float) -> Node3D:
 	var g := _new_geo()
 	var x := Vector3(m, 1, 1)
-	_sleeve(g, Vector3.ZERO, Vector3(0, 0.002, -0.262), Vector3.RIGHT, m)
-	_obox(g, "skin", Vector3(0, 0, -0.205), Vector3(0, -0.002, -0.262), 0.054, 0.044, 0.064, 0.036)
-	_obox(g, "skin", Vector3(0, -0.004, -0.256), Vector3(0, -0.008, -0.336), 0.074, 0.034, 0.086, 0.027)
-	_obox(g, "knuckle", Vector3(0, -0.006, -0.33), Vector3(0, -0.008, -0.346), 0.084, 0.028, 0.082, 0.026)
-	var fx := [-0.03, -0.01, 0.01, 0.029]
-	var pl := [0.042, 0.047, 0.043, 0.033]
-	var dl := [0.033, 0.036, 0.034, 0.027]
-	var fw := [0.019, 0.02, 0.019, 0.016]
+	var flex := deg_to_rad(16.0)
+	var hd := Vector3(0, -sin(flex), -cos(flex))
+	var hu := Vector3(0, cos(flex), -sin(flex))
+	var w := Vector3(0, 0, -0.262)
+	_sleeve(g, Vector3(0, 0, -0.14), w, Vector3.RIGHT, m)
+	_obox(g, "skin", Vector3(0, 0, -0.2), w + hd * 0.004, 0.054, 0.044, 0.06, 0.038)
+	var k := w + hd * 0.088
+	_obox(g, "skin", w - hd * 0.004, k, 0.072, 0.032, 0.08, 0.026, Vector3.RIGHT)
+	_obox(g, "knuckle", k - hd * 0.006, k + hd * 0.01, 0.08, 0.026, 0.078, 0.024, Vector3.RIGHT)
+	var fx := [-0.028, -0.009, 0.01, 0.028]
+	var pl := [0.04, 0.045, 0.042, 0.032]
+	var dl := [0.032, 0.035, 0.033, 0.026]
+	var fw := [0.018, 0.019, 0.018, 0.015]
 	for i in 4:
-		var base := Vector3(fx[i], -0.008, -0.342) * x
-		var a1 := deg_to_rad(18.0 + i * 4.0)
-		var a2 := deg_to_rad(62.0 + i * 6.0)
-		var j: Vector3 = base + Vector3(fx[i] * 0.12 * m, -sin(a1), -cos(a1)) * pl[i]
-		var tip: Vector3 = j + Vector3(0, -sin(a2), -cos(a2)) * dl[i]
-		_obox(g, "skin", base, j, fw[i], 0.018, fw[i] * 0.95, 0.017)
-		_obox(g, "skin", j, tip, fw[i] * 0.92, 0.016, fw[i] * 0.85, 0.014)
-	var t0 := Vector3(-0.034, -0.012, -0.262) * x
-	var t1 := Vector3(-0.058, -0.024, -0.3) * x
-	var t2 := Vector3(-0.062, -0.04, -0.334) * x
-	_obox(g, "skin", t0, t1, 0.026, 0.024, 0.023, 0.021, Vector3.UP)
-	_obox(g, "skin", t1, t2, 0.022, 0.02, 0.019, 0.017, Vector3.UP)
+		var base: Vector3 = (k + hd * 0.006 + Vector3(fx[i], 0, 0)) * x
+		var a1 := deg_to_rad(12.0 + i * 5.0)
+		var a2 := deg_to_rad(30.0 + i * 7.0)
+		var d1 := (hd * cos(a1) - hu * sin(a1) + Vector3(fx[i] * 0.6 * m, 0, 0)).normalized()
+		var d2 := (hd * cos(a1 + a2) - hu * sin(a1 + a2)).normalized()
+		var j: Vector3 = base + d1 * pl[i]
+		var tip: Vector3 = j + d2 * dl[i]
+		_obox(g, "skin", base, j, fw[i], 0.017, fw[i] * 0.95, 0.016, Vector3.RIGHT)
+		_obox(g, "skin", j, tip, fw[i] * 0.92, 0.015, fw[i] * 0.82, 0.013, Vector3.RIGHT)
+	var t0 := (w + hd * 0.02 + Vector3(-0.034, -0.012, 0)) * x
+	var t1 := (w + hd * 0.06 + Vector3(-0.05, -0.03, 0)) * x
+	var t2 := (w + hd * 0.09 + Vector3(-0.046, -0.05, 0)) * x
+	_obox(g, "skin", t0, t1, 0.025, 0.023, 0.022, 0.02, Vector3.UP)
+	_obox(g, "skin", t1, t2, 0.021, 0.019, 0.018, 0.016, Vector3.UP)
 	var n := Node3D.new()
 	g.build(n)
 	_tune(n)
@@ -201,15 +304,39 @@ func toggle_phone() -> void:
 	phone_on = not phone_on
 
 
-func _relaxed_pose(m: float, swing: float, breath: float, amp: float, run: float) -> Transform3D:
-	var pos := Vector3(0.25 * m, -0.29 - run * 0.03, -0.1)
-	var rot := Vector3(24.0 - run * 6.0, 8.0 * m, -68.0 * m)
-	pos.z += swing * 0.035 * m
-	pos.y += absf(swing) * 0.012
-	rot.x += swing * m * 5.0 + breath * 0.7
-	rot.z += swing * 3.0
-	pos.y += breath * 0.004
-	return Transform3D(Basis.from_euler(rot * PI / 180.0), pos)
+func set_phone(on: bool) -> void:
+	phone_on = on
+
+
+func is_phone_up() -> bool:
+	return phone >= 0.5
+
+
+func set_phone_screen(tex: Texture2D) -> void:
+	custom_screen = tex
+	mats.screen.set_shader_parameter("tex", tex if tex else screen_tex)
+
+
+func set_phone_target(p: Vector3, on := true) -> void:
+	phone_target = p
+	phone_target_on = on
+
+
+func _arm_pose(m: float, swing: float, breath: float, run: float, low: float) -> Transform3D:
+	var w := Vector3(rest.x * m, rest.y - run * 0.02 - low, rest.z)
+	w.z -= swing * 0.045
+	w.y += swing * 0.012 + breath * 0.003
+	w.x += absf(swing) * 0.004 * m
+	var d := Vector3(aim.x * m, aim.y + run * 0.15 + swing * 0.25, -1.0).normalized()
+	var b := Basis.looking_at(d, Vector3.UP)
+	b = Basis(d, deg_to_rad(turn * m + swing * 4.0 + breath * 0.6)) * b
+	return Transform3D(b, w - d * 0.262)
+
+
+func _in_view(xf: Transform3D) -> bool:
+	var a := xf * Vector3(0, 0, -0.08)
+	var b := xf * Vector3(0, 0, -0.38)
+	return a.z < -0.08 and b.y > b.z * 1.2
 
 
 func _grip_pose(swing: float, breath: float) -> Transform3D:
@@ -219,27 +346,32 @@ func _grip_pose(swing: float, breath: float) -> Transform3D:
 	return Transform3D(Basis.from_euler(Vector3(deg_to_rad(-14.0 + breath * 0.5), deg_to_rad(-8.0), deg_to_rad(-6.0))), pos)
 
 
-func animate(dt: float, phase: float, amp: float, run: float, air: float, look_vel: Vector2) -> void:
+func animate(dt: float, phase: float, amp: float, run: float, air: float, look_vel: Vector2, pitch := 0.0) -> void:
 	t += dt
 	phone = move_toward(phone, 1.0 if phone_on else 0.0, dt * 2.4)
-	lag = lag.lerp(look_vel.clamp(Vector2(-6, -6), Vector2(6, 6)) * 0.006, 1.0 - exp(-10.0 * dt))
+	lag = lag.lerp(look_vel.clamp(Vector2(-6, -6), Vector2(6, 6)) * 0.004, 1.0 - exp(-10.0 * dt))
 	var breath := sin(t * 1.7) * (1.0 - clampf(amp, 0.0, 1.0) * 0.6)
-	var swing := sin(phase) * amp * (1.0 + run * 0.8)
-	var bounce := Vector3(sin(phase) * 0.006 * amp, -cos(phase * 2.0) * 0.008 * amp + air, 0)
+	var swing := sin(phase) * clampf(amp, 0.0, 1.2) * (0.7 + run * 0.6)
+	var bounce := Vector3(0, -cos(phase * 2.0) * 0.006 * amp + air, 0)
 	var shift := Vector3(-lag.x, lag.y, 0) + bounce
-	var lt := _relaxed_pose(-1.0, swing, breath, amp, run)
+	var k := 0.9 if pitch > 0.0 else 0.3
+	var tilt := Transform3D(Basis(Vector3.RIGHT, -pitch * k), Vector3.ZERO)
+	var lt := _arm_pose(-1.0, swing, breath, run, smoothstep(0.0, 1.0, phone) * 0.05)
 	lt.origin += shift
-	arm_l.transform = lt
+	arm_l.transform = tilt * lt
+	arm_l.visible = _in_view(arm_l.transform)
 	var drop := smoothstep(0.0, 0.5, phone) if phone < 0.5 else 1.0 - smoothstep(0.5, 1.0, phone)
-	var down := Transform3D(Basis.from_euler(Vector3(deg_to_rad(-25.0 * drop), 0, 0)), Vector3(0.05, -0.42, 0.06) * drop)
+	var down := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-25.0 * drop)), Vector3(0.05, -0.42, 0.06) * drop)
 	var holding := phone >= 0.5
-	arm_r.visible = not holding
 	grip.visible = holding
 	if holding:
-		var gt := _grip_pose(swing * 0.4, breath)
+		var gt := _grip_pose(swing * 0.3, breath)
 		gt.origin += shift * 0.6
 		grip.transform = Transform3D(down.basis * gt.basis, gt.origin + down.origin)
+		_screen_update(dt)
 	else:
-		var rt := _relaxed_pose(1.0, swing, breath, amp, run)
+		var rt := _arm_pose(1.0, -swing, breath, run, 0.0)
 		rt.origin += shift
+		rt = tilt * rt
 		arm_r.transform = Transform3D(down.basis * rt.basis, rt.origin + down.origin)
+	arm_r.visible = not holding and _in_view(arm_r.transform)

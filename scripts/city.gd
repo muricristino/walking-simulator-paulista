@@ -321,12 +321,6 @@ func _gazeta() -> void:
 	_antenna(Vector3(-46.0, 52.0, -205.0), 70.0, true)
 
 
-func _fiesp() -> void:
-	var t := Tex.led_wall(77, 24, 48)
-	geo.add_mat("fiesp", mat(t[0], Color.WHITE, t[1], 1.4))
-	geo.frustum("fiesp", Vector3(52.0, 0.0, -262.0), Vector2(40.0, 44.0), Vector2(30.0, 20.0), 100.0, Vector2(40.0, 100.0), "roof")
-
-
 func _masp() -> void:
 	var z0 := MASP_Z.x
 	var z1 := MASP_Z.y

@@ -145,21 +145,6 @@ static func facade(seed: int, cols: int, rows: int, style: int, wall: Color, gla
 	return [_tex(img), _tex(gl)]
 
 
-static func led_wall(seed: int, cols: int, rows: int) -> Array:
-	rng.seed = seed
-	var img := Image.create(cols, rows, false, Image.FORMAT_RGB8)
-	var gl := Image.create(cols, rows, false, Image.FORMAT_RGB8)
-	for y in rows:
-		for x in cols:
-			var t := float(x) / cols * 2.0 + float(y) / rows * 1.4
-			var c := Color.from_hsv(fmod(t * 0.5 + 0.55, 1.0), 0.85, 1.0)
-			if (x + y) % 2 == 0:
-				c = c.darkened(0.35)
-			gl.set_pixel(x, y, c * 0.9)
-			img.set_pixel(x, y, c * 0.3)
-	return [_tex(img), _tex(gl)]
-
-
 static func masp_glass(seed: int) -> Array:
 	rng.seed = seed
 	var w := 64

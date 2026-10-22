@@ -13,6 +13,8 @@ var world: Node3D
 var geo: Geo
 var rng := RandomNumberGenerator.new()
 var lamps := 0
+var walls: StaticBody3D
+var floors: StaticBody3D
 
 
 func _ready() -> void:
@@ -32,6 +34,14 @@ func _ready() -> void:
 	add_child(tr)
 	world = Node3D.new()
 	vp.add_child(world)
+	walls = StaticBody3D.new()
+	walls.collision_layer = 1
+	world.add_child(walls)
+	floors = StaticBody3D.new()
+	floors.collision_layer = 2
+	floors.collision_mask = 0
+	world.add_child(floors)
+	solid(Vector3(0, -0.5, -350), Vector3(400, 1, 900), true)
 	geo = Geo.new()
 	_materials()
 	_environment()
@@ -43,6 +53,7 @@ func _ready() -> void:
 	_traffic()
 	_people()
 	geo.build(world)
+	_bounds()
 	_camera()
 	_screen()
 	_maybe_shot()
@@ -138,6 +149,31 @@ func _environment() -> void:
 	world.add_child(fill)
 
 
+func solid(c: Vector3, size: Vector3, floor := false) -> void:
+	var cs := CollisionShape3D.new()
+	var b := BoxShape3D.new()
+	b.size = size
+	cs.shape = b
+	cs.position = c
+	(floors if floor else walls).add_child(cs)
+
+
+func _bounds() -> void:
+	var h := 60.0
+	var zf := 56.0
+	var zb := -700.0
+	var m0 := MASP_Z.x - 6.0
+	var m1 := MASP_Z.y + 6.0
+	solid(Vector3(31.5, h * 0.5, (zf + zb) * 0.5), Vector3(1, h, zf - zb))
+	solid(Vector3(-31.5, h * 0.5, (zf + m1) * 0.5), Vector3(1, h, zf - m1))
+	solid(Vector3(-31.5, h * 0.5, (m0 + zb) * 0.5), Vector3(1, h, m0 - zb))
+	solid(Vector3(-62.5, h * 0.5, (m0 + m1) * 0.5), Vector3(1, h, m1 - m0))
+	solid(Vector3(-47.0, h * 0.5, m1 + 0.5), Vector3(31, h, 1))
+	solid(Vector3(-47.0, h * 0.5, m0 - 0.5), Vector3(31, h, 1))
+	solid(Vector3(0, h * 0.5, zf + 0.5), Vector3(64, h, 1))
+	solid(Vector3(0, h * 0.5, zb - 0.5), Vector3(64, h, 1))
+
+
 func _in_cross(z0: float, z1: float, pad := 0.0) -> bool:
 	for c in CROSS:
 		if z1 > c - 9.0 - pad and z0 < c + 9.0 + pad:
@@ -199,6 +235,7 @@ func _raised(key: String, xa: float, xb: float, z0: float, z1: float, h: float, 
 	var x0 := minf(xa, xb)
 	var x1 := maxf(xa, xb)
 	geo.ground(key, x0, x1, z0, z1, h, unit)
+	solid(Vector3((x0 + x1) * 0.5, h - 0.5, (z0 + z1) * 0.5), Vector3(x1 - x0, 1.0, z1 - z0), true)
 	geo.quad("curb", Vector3(x0, 0, z1), Vector3(x0, 0, z0), Vector3(x0, h, z0), Vector3(x0, h, z1), Vector3.LEFT, Vector2(2, 0.5))
 	geo.quad("curb", Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x1, h, z1), Vector3(x1, h, z0), Vector3.RIGHT, Vector2(2, 0.5))
 	geo.quad("curb", Vector3(x0, 0, z1), Vector3(x1, 0, z1), Vector3(x1, h, z1), Vector3(x0, h, z1), Vector3.BACK, Vector2(2, 0.5))
@@ -227,6 +264,7 @@ func _building(cx: float, cz: float, w: float, d: float, h: float, antenna: bool
 	var t := Tex.facade(100 + bld_count, cols, rows, p[0], p[1], p[2], rng.randf_range(0.2, 0.5))
 	geo.add_mat(key, mat(t[0], Color.WHITE, t[1], 1.0))
 	geo.box(key, Vector3(cx, h * 0.5, cz), Vector3(w, h, d), Vector2(cols * 3.0, rows * 3.6), Vector2.ZERO, 10.0, "roof")
+	solid(Vector3(cx, h * 0.5, cz), Vector3(w, h, d))
 	if rng.randf() < 0.5:
 		geo.box("roof", Vector3(cx + rng.randf_range(-w, w) * 0.2, h + 2.5, cz + rng.randf_range(-d, d) * 0.2), Vector3(w * 0.4, 5.0, d * 0.4), Vector2(4, 4))
 	if antenna:
@@ -327,20 +365,24 @@ func _masp() -> void:
 	var xa := -29.0
 	var xb := -57.0
 	geo.ground("slab", xb - 4.0, -30.0, z0 - 6.0, z1 + 6.0, 0.16, Vector2(3, 3))
+	solid(Vector3((xb - 4.0 - 30.0) * 0.5, -0.34, (z0 + z1) * 0.5), Vector3(absf(xb - 4.0 + 30.0), 1.0, z1 - z0 + 12.0), true)
 	for px in [xa, xb]:
 		for pz in [z0, z1]:
 			geo.box("red", Vector3(px, 12.75, pz), Vector3(2.4, 25.5, 3.6), Vector2(3, 3))
+			solid(Vector3(px, 12.75, pz), Vector3(2.4, 25.5, 3.6))
 	for px in [xa, xb]:
 		geo.box("red", Vector3(px, 23.8, (z0 + z1) * 0.5), Vector3(2.4, 3.4, z1 - z0 + 3.6), Vector2(3, 3))
 		geo.box("red", Vector3(px, 8.7, (z0 + z1) * 0.5), Vector3(2.4, 2.6, z1 - z0 + 3.6), Vector2(3, 3))
 	geo.box("masp_glass", Vector3((xa + xb) * 0.5, 15.65, (z0 + z1) * 0.5), Vector3(absf(xa - xb) - 0.4, 12.5, z1 - z0 - 2.0), Vector2(z1 - z0, 12.5), Vector2.ZERO, 8.0, "slab")
 	for i in 5:
 		geo.box("dark", Vector3(-30.0 - i * 0.2, 0.6 + i * 0.3, (z0 + z1) * 0.5 - 18.0 - i * 0.6), Vector3(3.0, 0.3, 4.0), Vector2(2, 2))
+		solid(Vector3(-30.0 - i * 0.2, 0.6 + i * 0.3, (z0 + z1) * 0.5 - 18.0 - i * 0.6), Vector3(3.0, 0.3, 4.0))
 
 
 func _trianon() -> void:
 	geo.ground("grass", 30.0, 92.0, MASP_Z.x, MASP_Z.y, 0.3, Vector2(4, 4))
 	geo.box("concrete", Vector3(30.5, 0.6, (MASP_Z.x + MASP_Z.y) * 0.5), Vector3(0.6, 1.2, MASP_Z.y - MASP_Z.x), Vector2(2, 1))
+	solid(Vector3(30.5, 0.6, (MASP_Z.x + MASP_Z.y) * 0.5), Vector3(0.6, 1.2, MASP_Z.y - MASP_Z.x))
 	for i in 70:
 		var p := Vector3(rng.randf_range(33, 90), 0.3, rng.randf_range(MASP_Z.x + 3, MASP_Z.y - 3))
 		_tree(p, rng.randf_range(1.2, 1.9))
@@ -349,6 +391,7 @@ func _trianon() -> void:
 func _tree(p: Vector3, s: float) -> void:
 	var trunk_h := 3.2 * s
 	geo.box("trunk", p + Vector3(0, trunk_h * 0.5, 0), Vector3(0.35, trunk_h, 0.35) * Vector3(s, 1, s), Vector2(1, 2))
+	solid(p + Vector3(0, trunk_h * 0.5, 0), Vector3(0.4 * s, trunk_h, 0.4 * s))
 	var leaf: String = "leaf%d" % (rng.randi() % 3)
 	for k in 3:
 		var sm := SphereMesh.new()
@@ -368,6 +411,7 @@ func _tree(p: Vector3, s: float) -> void:
 func _lamp_post(x: float, z: float, light: bool) -> void:
 	var sx := signf(x)
 	geo.box("metal", Vector3(x, 5.0, z), Vector3(0.25, 10.0, 0.25), Vector2(1, 4))
+	solid(Vector3(x, 5.0, z), Vector3(0.3, 10.0, 0.3))
 	geo.box("metal", Vector3(x - sx * 1.6, 9.9, z), Vector3(3.2, 0.18, 0.18), Vector2(1, 1))
 	geo.box("lamp", Vector3(x - sx * 3.0, 9.75, z), Vector3(0.9, 0.22, 0.4), Vector2(1, 1))
 	geo.box("metal", Vector3(x + sx * 0.8, 6.4, z), Vector3(1.6, 0.14, 0.14), Vector2(1, 1))
@@ -392,6 +436,7 @@ func _lamp_post(x: float, z: float, light: bool) -> void:
 func _signal(x: float, z: float, facing: float, red: bool) -> void:
 	var sx := signf(x)
 	geo.box("dark", Vector3(x, 3.0, z), Vector3(0.2, 6.0, 0.2), Vector2(1, 4))
+	solid(Vector3(x, 3.0, z), Vector3(0.25, 6.0, 0.25))
 	geo.box("dark", Vector3(x - sx * 3.0, 5.9, z), Vector3(6.0, 0.15, 0.15), Vector2(1, 1))
 	for hx in [x - sx * 5.5, x]:
 		var by: float = 5.0 if hx != x else 3.2
@@ -424,10 +469,12 @@ func _furniture() -> void:
 	_signal(-16.6, CROSS[0] - 10.0, -1.0, false)
 	if M.has("placa"):
 		geo.box("metal", Vector3(19.0, 1.8, -26.0), Vector3(0.1, 3.6, 0.1), Vector2(1, 1))
+		solid(Vector3(19.0, 1.8, -26.0), Vector3(0.15, 3.6, 0.15))
 		geo.quad("placa", Vector3(17.7, 2.9, -25.95), Vector3(20.3, 2.9, -25.95), Vector3(20.3, 3.6, -25.95), Vector3(17.7, 3.6, -25.95), Vector3.BACK, Vector2(2.6, 0.7))
 	_banca(Vector3(26.5, 0.15, -36.0))
 	for k in 6:
 		geo.box("dark", Vector3(-23.0, 0.6, -20.0 - k * 7.0), Vector3(0.6, 0.9, 1.8), Vector2(1, 1))
+		solid(Vector3(-23.0, 0.6, -20.0 - k * 7.0), Vector3(0.6, 0.9, 1.8))
 
 
 func _banca(p: Vector3) -> void:
@@ -438,6 +485,7 @@ func _banca(p: Vector3) -> void:
 		M.mags = mat(t, Color.WHITE, t, 0.55)
 		geo.add_mat("mags", M.mags)
 	geo.box("banca", p + Vector3(0, 1.35, 0), Vector3(3.0, 2.7, 6.0), Vector2(1, 1))
+	solid(p + Vector3(0, 1.35, 0), Vector3(3.0, 2.7, 6.0))
 	geo.box("banca", p + Vector3(-0.3, 2.85, 0), Vector3(3.8, 0.25, 6.8), Vector2(1, 1))
 	geo.quad("mags", p + Vector3(-1.52, 0.3, 2.8), p + Vector3(-1.52, 0.3, -2.8), p + Vector3(-1.52, 2.5, -2.8), p + Vector3(-1.52, 2.5, 2.8), Vector3.LEFT, Vector2(5.6, 2.2))
 	var ol := OmniLight3D.new()
@@ -458,6 +506,7 @@ func _car(x: float, z: float, toward: bool) -> void:
 		geo.add_mat(key, M[key])
 	var f := 1.0 if toward else -1.0
 	geo.box(key, Vector3(x, 0.72, z), Vector3(1.8, 0.75, 4.3), Vector2(2, 1))
+	solid(Vector3(x, 0.85, z), Vector3(1.9, 1.7, 4.4))
 	geo.box(key, Vector3(x, 1.38, z - f * 0.2), Vector3(1.6, 0.56, 2.2), Vector2(2, 1))
 	geo.box("dark", Vector3(x, 1.38, z - f * 0.2 + f * 1.11), Vector3(1.5, 0.48, 0.02), Vector2(1, 1))
 	geo.box("dark", Vector3(x, 1.38, z - f * 0.2 - f * 1.11), Vector3(1.5, 0.48, 0.02), Vector2(1, 1))
@@ -477,6 +526,7 @@ func _bus(x: float, z: float, toward: bool) -> void:
 		geo.add_mat("bus_win", M.bus_win)
 	var f := 1.0 if toward else -1.0
 	geo.box("bus", Vector3(x, 1.75, z), Vector3(2.6, 3.0, 12.5), Vector2(4, 3.0))
+	solid(Vector3(x, 1.6, z), Vector3(2.7, 3.2, 12.6))
 	for sx in [-1.31, 1.31]:
 		geo.quad("bus_win", Vector3(x + sx, 1.9, z - 5.5), Vector3(x + sx, 1.9, z + 5.5), Vector3(x + sx, 2.9, z + 5.5), Vector3(x + sx, 2.9, z - 5.5), Vector3(signf(sx), 0, 0), Vector2(2, 1))
 	var front := z + f * 6.26
@@ -528,6 +578,7 @@ func _person(p: Vector3) -> void:
 	geo.box(lg, p + Vector3(0, 0.42 * hs, 0), Vector3(0.38, 0.84 * hs, 0.24), Vector2(1, 1))
 	geo.box(sh, p + Vector3(0, 1.12 * hs, 0), Vector3(0.48, 0.62 * hs, 0.28), Vector2(1, 1))
 	geo.box(sk, p + Vector3(0, 1.57 * hs, 0), Vector3(0.22, 0.26, 0.22), Vector2(1, 1))
+	solid(p + Vector3(0, 0.85 * hs, 0), Vector3(0.5, 1.7 * hs, 0.32))
 
 
 func _people() -> void:

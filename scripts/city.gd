@@ -17,6 +17,7 @@ var geo: Geo
 var walls: StaticBody3D
 var floors: StaticBody3D
 var player: CharacterBody3D
+var listener: AudioListener3D
 var M := {}
 var paulista: Paulista
 var traffic: Traffic
@@ -54,7 +55,7 @@ func _ready() -> void:
 	vp.msaa_3d = Viewport.MSAA_DISABLED
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	vp.audio_listener_enable_3d = false
+	vp.audio_listener_enable_3d = true
 	add_child(vp)
 	var tr := TextureRect.new()
 	tr.texture = vp.get_texture()
@@ -130,6 +131,9 @@ func _camera() -> void:
 		feet = Vector3(f[0], 0.15, f[1])
 		target = Vector3(f[2], f[3], f[4])
 	player.setup(feet, target)
+	listener = AudioListener3D.new()
+	player.cam.add_child(listener)
+	listener.make_current()
 	player.capture(true)
 	var i := args.find("--autowalk")
 	if i >= 0 and i + 1 < args.size():

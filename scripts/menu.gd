@@ -290,9 +290,13 @@ func _options() -> void:
 	_slider(v, "Sensibilidade do mouse", 0.2, 3.0, 0.05, Game.mouse_sensitivity, func(x): return "%.2fx" % x, func(x):
 		Game.mouse_sensitivity = x
 		_changed())
-	_slider(v, "Volume", 0.0, 1.0, 0.05, Game.volume, func(x): return "%d%%" % roundi(x * 100.0), func(x):
+	_slider(v, "Volume geral", 0.0, 1.0, 0.05, Game.volume, func(x): return "%d%%" % roundi(x * 100.0), func(x):
 		Game.volume = x
 		_changed())
+	for b in [[&"Ambience", "Ambiente"], [&"SFX", "Efeitos"], [&"UI", "Interface"]]:
+		_slider(v, b[1], 0.0, 1.0, 0.05, Game.mix[b[0]], func(x): return "%d%%" % roundi(x * 100.0), func(x):
+			Game.mix[b[0]] = x
+			_changed())
 	_slider(v, "Campo de visão", 50.0, 90.0, 1.0, Game.fov, func(x): return "%d°" % roundi(x), func(x):
 		Game.fov = x
 		_changed())

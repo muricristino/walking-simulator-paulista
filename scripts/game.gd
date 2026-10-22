@@ -16,6 +16,8 @@ var mouse_sensitivity := 1.0
 var invert_y := false
 var fov := 64.0
 var volume := 0.8
+var mix := {&"Ambience": 1.0, &"SFX": 1.0, &"UI": 1.0}
+var bus_base := {}
 var fullscreen := false
 var best_time := -1.0
 
@@ -33,6 +35,9 @@ func _ready() -> void:
 	for a in TEST_ARGS:
 		if args.has(a):
 			test_mode = true
+	for b in mix:
+		var i := AudioServer.get_bus_index(b)
+		bus_base[b] = AudioServer.get_bus_volume_db(i) if i >= 0 else 0.0
 	_load()
 	apply()
 	get_tree().set_auto_accept_quit(false)
@@ -66,6 +71,12 @@ func apply() -> void:
 	var bus := AudioServer.get_bus_index(&"Master")
 	AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(volume, 0.0001)))
 	AudioServer.set_bus_mute(bus, volume <= 0.001)
+	for b in mix:
+		var i := AudioServer.get_bus_index(b)
+		if i < 0:
+			continue
+		AudioServer.set_bus_volume_db(i, bus_base.get(b, 0.0) + linear_to_db(maxf(mix[b], 0.0001)))
+		AudioServer.set_bus_mute(i, mix[b] <= 0.001)
 	if not test_mode:
 		var fs := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 		if fs != fullscreen:
@@ -89,6 +100,8 @@ func save_settings() -> void:
 	c.set_value("video", "fov", fov)
 	c.set_value("video", "fullscreen", fullscreen)
 	c.set_value("audio", "volume", volume)
+	for b in mix:
+		c.set_value("audio", String(b).to_lower(), mix[b])
 	c.save(SETTINGS)
 
 
@@ -113,6 +126,8 @@ func _load() -> void:
 		fov = c.get_value("video", "fov", fov)
 		fullscreen = c.get_value("video", "fullscreen", fullscreen)
 		volume = c.get_value("audio", "volume", volume)
+		for b in mix:
+			mix[b] = c.get_value("audio", String(b).to_lower(), mix[b])
 	var s := ConfigFile.new()
 	if s.load(SAVE) == OK:
 		best_time = s.get_value("best", "rio_claro", -1.0)

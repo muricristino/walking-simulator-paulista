@@ -28,6 +28,11 @@ func _ready() -> void:
 		{"t": 6.0, "move": Vector2(0, 1), "run": true, "shot": "08_lamp"},
 		{"t": 1.0, "look": Vector2(1.57, 0.0)},
 		{"t": 5.0, "move": Vector2(0, 1), "run": true, "shot": "09_street"},
+		{"t": 1.0, "look": Vector2(-1.79, 0.0)},
+		{"t": 2.6, "move": Vector2(0, 1)},
+		{"t": 1.0, "look": Vector2(-1.57, 0.0)},
+		{"t": 12.0, "move": Vector2(0, 1), "run": true},
+		{"t": 1.0, "look": Vector2(-1.2, -0.25), "shot": "10_masp"},
 	]
 	_begin()
 
@@ -49,7 +54,7 @@ func _physics_process(dt: float) -> void:
 	if left > 0.0:
 		return
 	var s: Dictionary = plan[i]
-	print("step %d pos %s yaw %.2f" % [i, player.global_position, player.rotation.y])
+	print("step %d pos %s yaw %.2f fps %d" % [i, player.global_position, player.rotation.y, Engine.get_frames_per_second()])
 	if s.has("shot"):
 		shooting = true
 		player.sim = {}

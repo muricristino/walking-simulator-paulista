@@ -86,9 +86,17 @@ func _input(e: InputEvent) -> void:
 				hands.toggle_phone()
 
 
+func _ready() -> void:
+	capture.call_deferred(true)
+
+
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and not auto:
+	if auto:
+		return
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		capture(true)
 
 
 func _keys() -> Vector2:

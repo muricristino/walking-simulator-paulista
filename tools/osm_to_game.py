@@ -3,6 +3,7 @@ import json, math, sys, hashlib
 AVENUE_CLIP = 30.5
 STREETS = [(40.0, 12.0, (-1, 1)), (-36.0, 7.0, (-1,)), (-146.0, 12.0, (-1, 1)), (-245.0, 8.0, (-1,)), (-429.0, 12.0, (-1, 1)), (-635.0, 12.0, (-1, 1))]
 MIN_AREA = 10.0
+OPEN_SPACES = [(-90.0, -28.0, -140.0, -44.0), (28.0, 96.0, -135.0, -49.0)]
 
 
 def area(poly):
@@ -40,6 +41,10 @@ def postprocess(buildings):
     out = []
     for b in buildings:
         poly = [list(p) for p in b["p"]]
+        cx = sum(p[0] for p in poly) / len(poly)
+        cz = sum(p[1] for p in poly) / len(poly)
+        if any(x0 < cx < x1 and z0 < cz < z1 for x0, x1, z0, z1 in OPEN_SPACES):
+            continue
         side = 1.0 if sum(p[0] for p in poly) > 0 else -1.0
         parts = [clip(poly, side, 0.0, AVENUE_CLIP)]
         for z, half, sides in STREETS:

@@ -196,38 +196,86 @@ class Kit:
             pts.append((c[0] + math.cos(a) * r, c[1] + (tilt if k < 2 else -tilt), c[2] + math.sin(a) * r))
         self.poly(mat, pts, [(0, 0), (1, 0), (1, 1), (0, 1)])
 
-    def tree(self, base, size=1.0, kind="ficus", seed=0, crown=None):
+    def blob(self, mat, c, rad, seg=7, rings=4, r=None, squash=1.0):
+        r = r or random.Random(0)
+        grid = []
+        for j in range(rings + 1):
+            ph = math.pi * j / rings
+            row = []
+            for i in range(seg):
+                th = 2 * math.pi * i / seg + (0.4 if j % 2 else 0.0)
+                k = 1.0 if j in (0, rings) else r.uniform(0.82, 1.12)
+                row.append((c[0] + math.sin(ph) * math.cos(th) * rad[0] * k, c[1] + math.cos(ph) * rad[1] * k * squash, c[2] + math.sin(ph) * math.sin(th) * rad[2] * k))
+            grid.append(row)
+        for j in range(rings):
+            for i in range(seg):
+                i2 = (i + 1) % seg
+                u0, u1 = i / seg * 2, (i + 1) / seg * 2
+                v0, v1 = j / rings, (j + 1) / rings
+                if j == 0:
+                    self.poly(mat, [grid[j][i], grid[j + 1][i2], grid[j + 1][i]], [(u0, v0), (u1, v1), (u0, v1)])
+                elif j == rings - 1:
+                    self.poly(mat, [grid[j][i], grid[j][i2], grid[j + 1][i]], [(u0, v0), (u1, v0), (u0, v1)])
+                else:
+                    self.quad(mat, grid[j][i], grid[j][i2], grid[j + 1][i2], grid[j + 1][i], u0, v0, u1, v1)
+
+    def leafball(self, core, leaf, c, rad, n, card, r):
+        self.blob(core, c, (rad[0] * 0.78, rad[1] * 0.7, rad[2] * 0.78), 7, 4, r)
+        for k in range(n):
+            th = r.uniform(0, 2 * math.pi)
+            ph = math.acos(r.uniform(-0.55, 1.0))
+            d = (math.sin(ph) * math.cos(th), math.cos(ph), math.sin(ph) * math.sin(th))
+            p = (c[0] + d[0] * rad[0] * 0.85, c[1] + d[1] * rad[1] * 0.8, c[2] + d[2] * rad[2] * 0.85)
+            sz = card * r.uniform(0.8, 1.25)
+            if d[1] > 0.55:
+                self.hcard(leaf, p, sz * 0.75, r.uniform(0, 3.14), r.uniform(-0.3, 0.3))
+            else:
+                self.card(leaf, p, sz * 1.4, sz * 1.15, math.atan2(d[0], d[2]) + math.pi / 2 + r.uniform(-0.5, 0.5))
+
+    def tree(self, base, size=1.0, kind="ficus", seed=0, crown=None, lean=(0.0, 0.0)):
         r = random.Random(seed)
         x, y, z = base
         bark = {"ficus": "bark_ficus", "plane": "bark_plane", "sibi": "bark"}[kind]
         leaf = {"ficus": "cut__leaves_ficus", "plane": "cut__leaves_light", "sibi": "cut__leaves_dark"}[kind]
-        th = {"ficus": 3.0, "plane": 5.0, "sibi": 4.2}[kind] * size
-        tr = 0.2 * size if kind != "ficus" else 0.45 * size
-        top = (x + r.uniform(-0.3, 0.3) * size, y + th, z + r.uniform(-0.3, 0.3) * size)
-        self.tube(bark, (x, y - 0.1, z), top, tr, tr * 0.8, 6, 3.0)
-        self.colq("wall", [(x - tr, y, z - tr), (x + tr, y, z - tr), (x + tr, y + 2, z - tr), (x - tr, y + 2, z - tr)])
-        self.colq("wall", [(x - tr, y, z + tr), (x + tr, y, z + tr), (x + tr, y + 2, z + tr), (x - tr, y + 2, z + tr)])
-        self.colq("wall", [(x - tr, y, z - tr), (x - tr, y, z + tr), (x - tr, y + 2, z + tr), (x - tr, y + 2, z - tr)])
-        self.colq("wall", [(x + tr, y, z - tr), (x + tr, y, z + tr), (x + tr, y + 2, z + tr), (x + tr, y + 2, z - tr)])
-        cr = crown or (4.0 * size)
-        ch = top[1] + cr * (0.45 if kind == "plane" else 0.35)
-        tips = []
-        nb = 4 if kind != "plane" else 3
+        core = "leaves_core_light" if kind == "plane" else "leaves_core"
+        th = {"ficus": 3.4, "plane": 5.5, "sibi": 4.5}[kind] * size * r.uniform(0.85, 1.15)
+        tr = {"ficus": 0.5, "plane": 0.22, "sibi": 0.3}[kind] * size
+        pts = [(x, y - 0.1, z)]
+        cx, cz = x, z
+        for k in range(3):
+            cx += r.uniform(-0.35, 0.35) * size + lean[0] * 0.08 * size
+            cz += r.uniform(-0.35, 0.35) * size + lean[1] * 0.08 * size
+            pts.append((cx, y + th * (k + 1) / 3, cz))
+        for k in range(3):
+            rr = tr * (1.0 - 0.15 * k)
+            self.tube(bark, pts[k], pts[k + 1], rr * (1.25 if k == 0 else 1.0), rr * 0.85, 6, 1.5)
+        if kind == "ficus":
+            for k in range(4):
+                a = r.uniform(0, 2 * math.pi)
+                self.tube(bark, (x + math.cos(a) * tr * 1.6, y - 0.1, z + math.sin(a) * tr * 1.6), (x + math.cos(a) * tr * 0.3, y + th * 0.45, z + math.sin(a) * tr * 0.3), tr * 0.35, tr * 0.15, 4, 1.0)
+        for (sx, sz_) in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            self.colq("wall", [(x + sx * tr, y, z + sz_ * tr), (x - sz_ * tr, y, z + sx * tr), (x - sz_ * tr, y + 2, z + sx * tr), (x + sx * tr, y + 2, z + sz_ * tr)])
+        top = pts[-1]
+        cr = crown or 5.0 * size
+        ch = top[1] + cr * {"ficus": 0.25, "plane": 0.45, "sibi": 0.3}[kind]
+        cc = (top[0] + lean[0] * cr * 0.45, ch, top[2] + lean[1] * cr * 0.45)
+        nb = {"ficus": 6, "plane": 3, "sibi": 5}[kind]
         for k in range(nb):
-            a = 2 * math.pi * k / nb + r.uniform(-0.5, 0.5)
-            spread = 0.35 if kind == "plane" else 0.6
-            tip = (top[0] + math.cos(a) * cr * spread, ch + r.uniform(-0.2, 0.6) * size, top[2] + math.sin(a) * cr * spread)
-            self.tube(bark, top, tip, tr * 0.55, tr * 0.2, 4, 2.0)
-            tips.append(tip)
-        n = int(10 + cr * 2.5)
-        for k in range(n):
-            a = r.uniform(0, 2 * math.pi)
-            rr = math.sqrt(r.random()) * cr * 0.85
-            c = (top[0] + math.cos(a) * rr, ch + r.uniform(-0.35, 0.5) * cr * 0.6, top[2] + math.sin(a) * rr)
-            s = r.uniform(1.6, 2.6) * size
-            self.hcard(leaf, c, s, r.uniform(0, 3.14), r.uniform(-0.4, 0.4))
-            if k % 2 == 0:
-                self.card(leaf, c, s * 1.5, s * 1.2, r.uniform(0, 3.14))
+            a = 2 * math.pi * k / nb + r.uniform(-0.4, 0.4)
+            tip = (cc[0] + math.cos(a) * cr * 0.55, ch + r.uniform(-0.3, 0.8) * size, cc[2] + math.sin(a) * cr * 0.55)
+            mid = ((top[0] + tip[0]) / 2 + r.uniform(-0.4, 0.4), (top[1] + tip[1]) / 2 + 0.4, (top[2] + tip[2]) / 2 + r.uniform(-0.4, 0.4))
+            self.tube(bark, top, mid, tr * 0.5, tr * 0.35, 5, 1.0)
+            self.tube(bark, mid, tip, tr * 0.35, tr * 0.12, 4, 1.0)
+        flat = {"ficus": 0.55, "plane": 0.8, "sibi": 0.6}[kind]
+        nblob = {"ficus": 7, "plane": 4, "sibi": 6}[kind]
+        if cr > 7:
+            nblob += 2
+        for k in range(nblob):
+            a = 2 * math.pi * k / nblob + r.uniform(-0.3, 0.3)
+            d = cr * r.uniform(0.35, 0.62) if k else 0.0
+            rad = cr * r.uniform(0.42, 0.55)
+            c = (cc[0] + math.cos(a) * d, ch + r.uniform(-0.15, 0.35) * cr * flat + (0.3 * cr * flat if k == 0 else 0), cc[2] + math.sin(a) * d)
+            self.leafball(core, leaf, c, (rad, rad * flat, rad), int(12 + rad * 1.5), max(1.6, rad * 0.7), r)
 
     def export(self, name, extra_meta=None):
         import bpy
@@ -338,3 +386,31 @@ def tower(kit, pts, y0, h, tex, tile=(8.0, 12.0), lobby="glass_dark", lobby_h=4.
     cx = sum(p[0] for p in pts) / len(pts)
     cz = sum(p[1] for p in pts) / len(pts)
     kit.box("concrete_wall", (cx, y0 + h, cz), (4.0, 3.0, 5.0), 0.0, col=None)
+
+
+def sbush(kit, s, t, y, length, h, seed=0, light=False, depth=1.9):
+    r = random.Random(seed)
+    n = max(1, int(length / 1.5))
+    for k in range(n):
+        ss = s - length / 2 + (k + 0.5) * length / n
+        x, z = frame(ss, t + r.uniform(-0.25, 0.25))
+        rr = r.uniform(0.85, 1.2)
+        hh = h * r.uniform(0.85, 1.15)
+        kit.leafball("leaves_core_light" if light else "leaves_core", "cut__leaves_light" if light else "cut__leaves_ficus", (x, y + hh * 0.5, z), (depth * 0.5 * rr, hh * 0.55, depth * 0.5 * rr), 5, 0.9 * rr, r)
+
+
+def climber(kit, s0, s1, t, ytop, drop=2.2, seed=0):
+    r = random.Random(seed)
+    s = s0
+    while s < s1:
+        w = r.uniform(1.5, 3.5)
+        d = drop * r.uniform(0.5, 1.2)
+        a, b = frame(s, t), frame(min(s + w, s1), t)
+        y0, y1 = ytop(s), ytop(min(s + w, s1))
+        kit.poly("cut__climber", [(a[0], y0 - d, a[1]), (b[0], y1 - d, b[1]), (b[0], y1 + 0.3, b[1]), (a[0], y0 + 0.3, a[1])], [(0, 0), (w / 2.5, 0), (w / 2.5, 1), (0, 1)])
+        s += w + r.uniform(0.5, 4.0)
+
+
+def lean_to(s, sign):
+    a, b = frame(s, 0.0), frame(s, 1.0)
+    return ((b[0] - a[0]) * sign, (b[1] - a[1]) * sign)

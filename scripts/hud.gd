@@ -19,8 +19,6 @@ var hint_label: Label
 var hint_box: PanelContainer
 var banner: Label
 var compass: Compass
-var phone_vp: SubViewport
-var phone_map: PhoneMap
 var goal_done := false
 var exploring := false
 var run_time := 0.0
@@ -31,7 +29,6 @@ var start_yaw := 0.0
 var title_t := 0.0
 var best_d := INF
 var stall := 0.0
-var phone_t := 0.0
 var banner_t := 0.0
 
 
@@ -83,7 +80,9 @@ func build(c: Node) -> void:
 	hint_box.position = Vector2(roundf(320 - hint_box.size.x * 0.5), 470 - hint_box.size.y)
 	banner = _label(root, Vector2(0, 200), Vector2(640, 40), HORIZONTAL_ALIGNMENT_CENTER, 16, UI.HOT, UI.bold())
 	banner.visible = false
-	_phone()
+	var hands = city.player.get("hands")
+	if hands and hands.has_method("set_phone_target"):
+		hands.set_phone_target(TARGET)
 	var ml := CanvasLayer.new()
 	ml.layer = 10
 	add_child(ml)
@@ -240,11 +239,6 @@ func _process(dt: float) -> void:
 		banner_t -= dt
 		banner.visible = banner_t > 0.0
 	menu.set_run_time(run_time)
-	phone_t -= dt
-	if phone_t <= 0.0:
-		phone_t = 0.2
-		phone_map.queue_redraw()
-		phone_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	compass.queue_redraw()
 
 
@@ -290,23 +284,6 @@ func _chime() -> void:
 	audio.play_ui(w, -6.0)
 
 
-func _phone() -> void:
-	phone_vp = SubViewport.new()
-	phone_vp.size = Vector2i(56, 112)
-	phone_vp.disable_3d = true
-	phone_vp.transparent_bg = false
-	phone_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
-	add_child(phone_vp)
-	phone_map = PhoneMap.new()
-	phone_map.hud = self
-	phone_map.size = Vector2(56, 112)
-	phone_vp.add_child(phone_map)
-
-
-func phone_texture() -> Texture2D:
-	return phone_vp.get_texture()
-
-
 class Compass extends Control:
 	var hud: Node
 	var nudge := false
@@ -350,39 +327,3 @@ class Compass extends Control:
 			var s := signf(rel)
 			var x := w + 3.0 if s > 0 else -3.0
 			draw_colored_polygon(PackedVector2Array([Vector2(x, 2), Vector2(x, 14), Vector2(x + 7 * s, 8)]), col)
-
-
-class PhoneMap extends Control:
-	var hud: Node
-	const X0 := -200.0
-	const X1 := 60.0
-	const Z0 := -430.0
-	const Z1 := 60.0
-
-	func _map(p: Vector3) -> Vector2:
-		return Vector2((p.x - X0) / (X1 - X0) * size.x, (p.z - Z0) / (Z1 - Z0) * size.y)
-
-	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.1, 0.12, 0.16))
-		var road := Color(0.45, 0.45, 0.5)
-		var a := _map(Vector3(-16, 0, Z1))
-		var b := _map(Vector3(16, 0, Z0))
-		draw_rect(Rect2(a.x, b.y, b.x - a.x, a.y - b.y), road)
-		for z in [-150.0, -380.0]:
-			var c := _map(Vector3(X0, 0, z - 6))
-			var d := _map(Vector3(X1, 0, z + 6))
-			draw_rect(Rect2(c.x, c.y, d.x - c.x, d.y - c.y), Color(0.3, 0.3, 0.34))
-		var r0 := _map(Vector3(-200, 0, -341))
-		var r1 := _map(Vector3(-16, 0, -333))
-		draw_rect(Rect2(r0.x, r0.y, r1.x - r0.x, r1.y - r0.y), Color(0.35, 0.6, 0.35))
-		var m0 := _map(Vector3(-40, 0, -131))
-		var m1 := _map(Vector3(-18, 0, -53))
-		draw_rect(Rect2(m0.x, m0.y, m1.x - m0.x, m1.y - m0.y), Color(0.75, 0.15, 0.12))
-		var t := _map(TARGET)
-		draw_rect(Rect2(t.x - 2, t.y - 2, 5, 5), UI.HOT)
-		var pl: Node3D = hud.city.player
-		var p := _map(pl.global_position)
-		p = p.clamp(Vector2(2, 2), size - Vector2(2, 2))
-		var f := Vector2(-sin(pl.rotation.y), -cos(pl.rotation.y))
-		draw_line(p, p + f * 6.0, Color.WHITE, 1.0)
-		draw_rect(Rect2(p.x - 1, p.y - 1, 3, 3), Color(1, 0.3, 0.3))

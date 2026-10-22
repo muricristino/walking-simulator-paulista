@@ -758,7 +758,8 @@ func _links(w: Dictionary, prev: float) -> bool:
 		var at_end: bool = ls < 0.5 or ls > l.length - 0.5
 		var to: RefCounted = k.to
 		if to.kind == "crossing":
-			if not to.enabled or rng.randf() > 0.4:
+			var pc := 0.75 if to.light and absf(float(to.light_z) - Layout.MASP_CROSSWALK_Z) < 1.0 else 0.4
+			if not to.enabled or rng.randf() > pc:
 				continue
 			_enter_crossing(w, to, k.s2)
 			return true

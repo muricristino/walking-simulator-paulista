@@ -160,12 +160,12 @@ for i, (p, n, o, sd) in enumerate(far[::2]):
     x, z = p[0] + n[0] * (o + sd * 0.9), p[1] + n[1] * (o + sd * 0.9)
     k.leafball("leaves_core", "cut__leaves_ficus", (x, street_y(x, z) + 0.9, z), (1.1, 0.8, 1.1), 5, 1.0, random.Random(i))
 for i, (p, n, o, sd) in enumerate(far[1::5]):
-    x, z = p[0] + n[0] * (o - sd * 1.2), p[1] + n[1] * (o - sd * 1.2)
+    x, z = p[0] + n[0] * (o - sd * 0.6), p[1] + n[1] * (o - sd * 0.6)
     k.tree((x, street_y(x, z) + CURB, z), 1.2, "sibi" if i % 2 else "ficus", seed=300 + i, crown=5.5)
 for i, (p, n, o, sd) in enumerate(pm_edge[::4]):
     if i % 2:
         continue
-    x, z = p[0] + n[0] * sd * 6.3, p[1] + n[1] * sd * 6.3
+    x, z = p[0] + n[0] * sd * 6.0, p[1] + n[1] * sd * 6.0
     k.tree((x, street_y(x, z) + CURB, z), 1.1, ("sibi", "ficus", "plane")[i % 3], seed=400 + i, crown=5.0)
 for side in (1, -1):
     a, b = (RW, SW) if side > 0 else (-SW, -RW)
@@ -247,7 +247,7 @@ k.beam("white", (a[0], cy + 14.8, a[1]), (b[0], cy + 14.8, b[1]), 0.08, 4)
 sbox(k, "glass_dark", 389.5, 12.0, cy + 2.5, (0.1, 3.0, 2.0), col=None)
 for i in range(5):
     sbox(k, "granite", 389.5, 9.0 + i * 0.6, WY(389) + i * 0.1 - 0.1, (0.6, 0.2 + i * 0.1, 4.0))
-vwall(k, "cut__fence_bars", 380.0, 405.0, WALL, lambda s: WY(s), lambda s: WY(s) + 2.0, step=5.0, tile=(3.0, 2.0), vfix=(0, 1))
+vwall(k, "cut__fence_bars", 380.0, 401.0, WALL, lambda s: WY(s), lambda s: WY(s) + 2.0, step=5.0, tile=(3.0, 2.0), vfix=(0, 1))
 
 def inv_t(p):
     best = None
@@ -293,7 +293,7 @@ for idx in low:
     k.prism("concrete_wall", pts, y0, y0 + min(b["h"], 3.2), top="grass", tile=(4.0, 3.2))
 
 RT = -SW - 0.1
-entries = [(156.0, "guarita"), (176.0, "stairs"), (199.0, "gate"), (222.0, "garden"), (246.0, "guarita"), (262.0, "gate"), (280.0, "stairs"), (296.0, "gate"), (318.0, "gate"), (338.0, "guarita"), (352.0, "gate"), (372.0, "garden"), (392.0, "guarita")]
+entries = [(156.0, "guarita"), (176.0, "stairs"), (199.0, "gate"), (222.0, "garden"), (246.0, "guarita"), (262.0, "gate"), (280.0, "stairs"), (296.0, "gate"), (318.0, "gate"), (338.0, "guarita"), (352.0, "gate"), (372.0, "garden"), (390.0, "garden")]
 fs = 147.0
 for s_e, kind in entries:
     w = {"guarita": 5.0, "stairs": 6.0, "gate": 6.5, "garden": 3.0}[kind]
@@ -315,8 +315,8 @@ for s_e, kind in entries:
     elif kind == "garden":
         sbush(k, s_e + w / 2, RT - 1.0, WY(s_e), w, 1.4, seed=int(s_e))
     fs = s_e + w
-vwall(k, "stone", fs, S1, RT, lambda s: WY(s) - 0.2, lambda s: WY(s) + 0.6, step=6.0, tile=(2.0, 1.0))
-vwall(k, "cut__fence_bars", fs, S1, RT, lambda s: WY(s) + 0.6, lambda s: WY(s) + 2.4, step=6.0, tile=(3.0, 1.8), vfix=(0, 1))
+vwall(k, "stone", fs, 397.0, RT, lambda s: WY(s) - 0.2, lambda s: WY(s) + 0.6, step=6.0, tile=(2.0, 1.0))
+vwall(k, "cut__fence_bars", fs, 397.0, RT, lambda s: WY(s) + 0.6, lambda s: WY(s) + 2.4, step=6.0, tile=(3.0, 1.8), vfix=(0, 1))
 strip(k, "grass", 147.0, S1, RT - 12.0, RT, lambda s, t: WY(s) + 0.05, step=12.0, tile=(4, 4), col=None)
 for i, s in enumerate(range(150, 405, 9)):
     sbush(k, s + 3.5, RT - 1.2 - (i % 3) * 0.4, WY(s), 6.0, 1.3 + (i % 4) * 0.4, seed=200 + i, light=i % 3 == 0)
@@ -330,14 +330,14 @@ sbush(k, 159.0, WALL + 1.2, WY(159), 18.0, 1.8, seed=61, depth=2.0)
 trees = [(160, 6.6, "sibi", 1.3), (176, 6.8, "ficus", 1.5), (196, 6.6, "sibi", 1.4), (214, 6.8, "ficus", 1.6), (246, 6.6, "sibi", 1.3), (276, 6.8, "ficus", 1.4),
          (296, 7.0, "ficus", 1.9), (322, 6.8, "ficus", 1.6), (352, 6.6, "sibi", 1.3), (378, 6.8, "ficus", 1.5),
          (168, -6.8, "ficus", 1.5), (190, -6.6, "sibi", 1.3), (226, -6.8, "ficus", 1.5), (258, -6.6, "sibi", 1.4), (288, -6.8, "ficus", 1.6), (312, -7.0, "ficus", 1.8),
-         (338, -6.8, "sibi", 1.4), (364, -6.8, "ficus", 1.6), (398, -6.6, "sibi", 1.3)]
+         (338, -6.8, "sibi", 1.4), (364, -6.8, "ficus", 1.6), (390, -6.6, "sibi", 1.3)]
 for i, (s, t, kind, sz) in enumerate(trees):
     x, z = frame(s, t)
     y = walk(s, 0)
     sbox(k, "soil", s, t, y - 0.1, (1.2, 0.13, 1.6), col=None)
     k.tree((x, y, z), sz, kind, seed=100 + i * 13, crown=(4.9 if kind == "ficus" else 4.4) * sz, lean=lean_to(s, -0.9 if t > 0 else 0.9))
 for s in (186.0, 206.0):
-    sbox(k, "planter", s, 6.0, walk(s, 0), (1.6, 1.0, 2.6), top="soil")
+    sbox(k, "planter", s, 6.5, walk(s, 0), (1.6, 1.0, 2.6), top="soil")
 
 POLES = [150.0, 171.0, 203.0, 236.0, 268.0, 301.0, 333.0, 366.0, 398.0]
 tops = []

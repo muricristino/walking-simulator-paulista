@@ -17,6 +17,8 @@ var placeholder_cars := true
 var parked_spots := []
 var parked_root: Node3D
 var placeholders: Node3D
+var walk_root: Node3D
+var walk_paths := []
 
 
 func _tex(name: String) -> ImageTexture:
@@ -83,7 +85,29 @@ func build() -> Node3D:
 	_body(root, floor_faces, 2)
 	_body(root, wall_faces, 1)
 	_parking(root)
+	_walkways(root)
 	return root
+
+
+func _walkways(root: Node3D) -> void:
+	var path := ProjectSettings.globalize_path(DIR + "rc_walk.json")
+	if not FileAccess.file_exists(path):
+		return
+	walk_root = Node3D.new()
+	walk_root.name = "WalkPaths"
+	root.add_child(walk_root)
+	for q in JSON.parse_string(FileAccess.get_file_as_string(path)).paths:
+		var p := Path3D.new()
+		p.name = q.name
+		var c := Curve3D.new()
+		for v in q.pts:
+			c.add_point(Vector3(v[0], v[1], v[2]))
+		p.curve = c
+		p.set_meta("kind", q.kind)
+		p.set_meta("width", q.width)
+		p.add_to_group("rc_walk")
+		walk_root.add_child(p)
+		walk_paths.append(p)
 
 
 func _parking(root: Node3D) -> void:

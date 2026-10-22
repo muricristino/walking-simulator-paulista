@@ -466,6 +466,22 @@
 },
 {
 "p": [
+-392.86,
+-4.9,
+-308.26
+],
+"dir": [
+-0.9963,
+0.0865
+],
+"kind": "car",
+"len": 4.6,
+"street": "rio_claro",
+"side": "right",
+"occupied": true
+},
+{
+"p": [
 -221.5,
 -1.21,
 -316.13
@@ -478,7 +494,7 @@
 "len": 4.6,
 "street": "rio_claro",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -494,7 +510,7 @@
 "len": 4.6,
 "street": "rio_claro",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -590,7 +606,7 @@
 "len": 2.0,
 "street": "rio_claro",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -606,7 +622,7 @@
 "len": 2.0,
 "street": "rio_claro",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -622,7 +638,7 @@
 "len": 2.0,
 "street": "rio_claro",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -638,7 +654,7 @@
 "len": 2.0,
 "street": "rio_claro",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -830,7 +846,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -846,7 +862,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -958,7 +974,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -974,7 +990,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1022,7 +1038,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1038,7 +1054,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1070,7 +1086,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1086,7 +1102,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1102,7 +1118,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1118,7 +1134,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "left",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1454,7 +1470,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1470,7 +1486,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1502,7 +1518,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1518,7 +1534,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1742,7 +1758,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1758,7 +1774,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1902,7 +1918,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -1918,7 +1934,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -1998,7 +2014,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -2014,7 +2030,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -2062,7 +2078,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 },
 {
 "p": [
@@ -2078,7 +2094,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": false
+"occupied": true
 },
 {
 "p": [
@@ -2126,7 +2142,7 @@
 "len": 4.6,
 "street": "pamplona",
 "side": "right",
-"occupied": true
+"occupied": false
 }
 ]
 }

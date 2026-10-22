@@ -38,6 +38,11 @@ var placed := []
 var lod_t := 0.0
 
 
+func _input(e: InputEvent) -> void:
+	if vp:
+		vp.push_input(e)
+
+
 func _ready() -> void:
 	rng.seed = 7
 	vp = SubViewport.new()

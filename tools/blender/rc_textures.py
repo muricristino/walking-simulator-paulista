@@ -58,8 +58,8 @@ def herringbone():
     shades = {}
     for b in np.unique(cell):
         r = rng.random()
-        base = np.array([0.50, 0.47, 0.44]) if r < 0.6 else (np.array([0.56, 0.44, 0.38]) if r < 0.85 else np.array([0.40, 0.39, 0.38]))
-        shades[b] = base * rng.uniform(0.85, 1.12)
+        base = np.array([0.56, 0.55, 0.53]) if r < 0.55 else (np.array([0.50, 0.49, 0.48]) if r < 0.85 else np.array([0.60, 0.58, 0.55]))
+        shades[b] = base * rng.uniform(0.9, 1.08)
     for y in range(n * u):
         for x in range(n * u):
             i, j = x // u, y // u
@@ -70,8 +70,16 @@ def herringbone():
                 edge = True
             if y % u == 0 and cell[(j - 1) % n, i] != b:
                 edge = True
-            a[y, x] = c * (0.45 if edge else 1.0)
-    a += rng.normal(0, 0.025, a.shape[:2])[..., None]
+            a[y, x] = c * (0.62 if edge else 1.0)
+    a += rng.normal(0, 0.02, a.shape[:2])[..., None]
+    sm = rng.normal(0, 1, (6, 6))
+    big = np.kron(sm, np.ones((22, 22)))[:128, :128]
+    for _ in range(3):
+        big = (big + np.roll(big, 5, 0) + np.roll(big, 5, 1) + np.roll(big, -5, 0) + np.roll(big, -5, 1)) / 5
+    a *= (1 + big * 0.07)[..., None]
+    for k in range(10):
+        x, y = rng.integers(0, 120), rng.integers(0, 120)
+        a[y:y + rng.integers(2, 7), x:x + rng.integers(2, 9)] *= rng.uniform(0.75, 0.9)
     save("paver", a)
 
 
@@ -405,6 +413,67 @@ def tent():
     save("tent", a)
 
 
+def core():
+    r = np.random.default_rng(31)
+    a = fill(64, 64, (0.12, 0.22, 0.09), 0.03, 0.05, 4)
+    for k in range(260):
+        x, y = r.integers(0, 62), r.integers(0, 62)
+        c = np.array([0.16, 0.30, 0.12]) * r.uniform(0.6, 1.3)
+        a[y:y + 2, x:x + 3] = c
+    save("leaves_core", a)
+    a = fill(64, 64, (0.20, 0.32, 0.12), 0.03, 0.05, 4)
+    for k in range(260):
+        x, y = r.integers(0, 62), r.integers(0, 62)
+        a[y:y + 2, x:x + 3] = np.array([0.30, 0.46, 0.18]) * r.uniform(0.6, 1.3)
+    save("leaves_core_light", a)
+
+
+def climber():
+    r = np.random.default_rng(41)
+    a = np.zeros((64, 64, 4))
+    for k in range(700):
+        y = int(abs(r.normal(0, 22)))
+        x = r.integers(0, 64)
+        if y > 63:
+            continue
+        c = np.array([0.18, 0.34, 0.13]) * r.uniform(0.6, 1.3)
+        a[y:y + 2, x:x + 2, :3] = c
+        a[y:y + 2, x:x + 2, 3] = 1
+    save("climber", a)
+
+
+def text_plate(name, w, h, bg, fg, txt, font, pt, border=None):
+    args = ["magick", "-size", "%dx%d" % (w, h), "xc:" + bg]
+    if border:
+        args += ["-fill", "none", "-stroke", border, "-strokewidth", "1", "-draw", "rectangle 1,1 %d,%d" % (w - 2, h - 2), "-stroke", "none"]
+    args += ["-font", font, "-pointsize", str(pt), "-fill", fg, "-gravity", "center", "-annotate", "+0+0", txt, "-depth", "8", "PNG24:" + os.path.join(OUT, name + ".png")]
+    subprocess.run(args, check=True)
+
+
+def signs():
+    f = "/System/Library/Fonts/Supplemental/Arial Narrow Bold.ttf"
+    text_plate("placa_rioclaro", 128, 32, "#1f4fa8", "white", "AL. RIO CLARO", f, 17, "white")
+    text_plate("placa_saocarlos", 128, 32, "#1f4fa8", "white", "R. S. CARLOS DO PINHAL", f, 11, "white")
+    text_plate("placa_pamplona", 128, 32, "#1f4fa8", "white", "R. PAMPLONA", f, 17, "white")
+    text_plate("banca_sign", 128, 16, "#e8e6e0", "#1a1a1a", "BANCA TRIANON MASP", "/System/Library/Fonts/Supplemental/Times New Roman Bold.ttf", 10)
+    n = 32
+    yy, xx = np.mgrid[0:n, 0:n] - (n - 1) / 2
+    d = np.sqrt(xx ** 2 + yy ** 2)
+    a = np.ones((n, n, 3)) * 0.95
+    ring = (d > 11) & (d < 14.5)
+    a[ring] = (0.8, 0.1, 0.1)
+    e = (np.abs(xx) < 5) & (np.abs(yy) < 7) & ~((xx > -2) & ((np.abs(yy) > 1.2) & (np.abs(yy) < 5.2)))
+    a[e] = (0.1, 0.1, 0.1)
+    diag = (np.abs(xx - yy) < 1.6) & (d < 13)
+    a[diag] = (0.8, 0.1, 0.1)
+    save("sign_noparking", a)
+    a = np.ones((n, n, 3)) * np.array([0.12, 0.3, 0.7])
+    a[d > 14.5] = 0.95
+    p = (np.abs(xx + 3) < 2) & (np.abs(yy) < 9) | ((np.abs(yy + 4) < 5) & (np.abs(xx - 1) < 5) & ~((np.abs(yy + 4) < 2) & (np.abs(xx - 1) < 2)) & (xx > -5))
+    a[p & (d < 14)] = 0.97
+    save("sign_parking", a)
+
+
 def copy(src, name, resize=None, mod=None):
     args = ["magick", src]
     if resize:
@@ -468,6 +537,9 @@ car_tex("car_silver", (0.60, 0.62, 0.64))
 car_tex("car_red", (0.72, 0.08, 0.08))
 tire()
 tent()
+core()
+climber()
+signs()
 copy(os.path.join(ROOT, "assets/road/b_128.png"), "asphalt")
 copy(os.path.join(ROOT, "assets/props/bark.png"), "bark")
 if DL:

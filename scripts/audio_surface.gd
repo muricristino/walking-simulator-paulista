@@ -56,7 +56,7 @@ func _scan(n: Node) -> void:
 func step(budget_ms := 4.0) -> void:
 	var t0 := Time.get_ticks_usec()
 	while not pending.is_empty():
-		var mi: MeshInstance3D = pending.pop_back()
+		var mi: Variant = pending.pop_back()
 		if is_instance_valid(mi) and mi.is_inside_tree() and mi.mesh:
 			_index(mi)
 		if (Time.get_ticks_usec() - t0) * 0.001 > budget_ms:

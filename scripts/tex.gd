@@ -72,12 +72,13 @@ static func mosaic(seed: int) -> ImageTexture:
 	return _tex(img)
 
 
-static func stripes(a: Color, b: Color, w: int, h: int, band: int, seed: int) -> ImageTexture:
+static func stripes(a: Color, b: Color, w: int, h: int, band: int, seed: int, diag := false) -> ImageTexture:
 	rng.seed = seed
 	var img := Image.create(w, h, false, Image.FORMAT_RGB8)
 	for y in h:
 		for x in w:
-			var c := a if (y / band) % 2 == 0 else b
+			var k := (x + y) / (band * 2) if diag else y / band
+			var c := a if k % 2 == 0 else b
 			img.set_pixel(x, y, _grain(c, 0.04))
 	return _tex(img)
 
@@ -184,4 +185,16 @@ static func magazines(seed: int) -> ImageTexture:
 				for xx in range(x, mini(x + w - 1, 48)):
 					img.set_pixel(xx, yy, _grain(c, 0.08))
 			x += w
+	return _tex(img)
+
+
+static func fence(seed: int, col: Color) -> ImageTexture:
+	rng.seed = seed
+	var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	for y in 32:
+		for x in 32:
+			if x % 6 == 0 or y == 2 or y == 29:
+				var c := _grain(col, 0.04)
+				img.set_pixel(x, y, Color(c.r, c.g, c.b, 1.0))
 	return _tex(img)

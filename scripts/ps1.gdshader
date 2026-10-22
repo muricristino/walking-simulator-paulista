@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode cull_disabled, specular_disabled, diffuse_lambert, vertex_lighting;
+render_mode cull_disabled, specular_disabled, diffuse_lambert;
 
 uniform sampler2D tex : source_color, filter_nearest, repeat_enable;
 uniform sampler2D glow_tex : source_color, filter_nearest, repeat_enable;

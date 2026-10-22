@@ -50,7 +50,7 @@ func quad(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector
 			_tri(st, [pts[0], pts[2], pts[3]], [uvs[0], uvs[2], uvs[3]], n)
 
 
-func ground(key: String, x0: float, x1: float, z0: float, z1: float, y: float, unit := Vector2(4, 4), seg := 6.0) -> void:
+func ground(key: String, x0: float, x1: float, z0: float, z1: float, y: float, unit := Vector2(4, 4), seg := 3.5) -> void:
 	quad(key, Vector3(x0, y, z0), Vector3(x1, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z1), Vector3.UP, unit, Vector2(x0 / unit.x, z0 / unit.y), seg)
 
 

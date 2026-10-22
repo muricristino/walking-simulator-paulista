@@ -69,8 +69,9 @@ func apply() -> void:
 
 func save_settings() -> void:
 	var c := ConfigFile.new()
-	c.set_value("input", "mouse_sensitivity", mouse_sensitivity)
-	c.set_value("input", "invert_y", invert_y)
+	c.load(SETTINGS)
+	c.set_value("controls", "mouse_sensitivity", mouse_sensitivity)
+	c.set_value("controls", "invert_y", invert_y)
 	c.set_value("video", "fov", fov)
 	c.set_value("video", "fullscreen", fullscreen)
 	c.set_value("audio", "volume", volume)
@@ -93,8 +94,8 @@ func record(t: float) -> bool:
 func _load() -> void:
 	var c := ConfigFile.new()
 	if c.load(SETTINGS) == OK:
-		mouse_sensitivity = c.get_value("input", "mouse_sensitivity", mouse_sensitivity)
-		invert_y = c.get_value("input", "invert_y", invert_y)
+		mouse_sensitivity = c.get_value("controls", "mouse_sensitivity", mouse_sensitivity)
+		invert_y = c.get_value("controls", "invert_y", invert_y)
 		fov = c.get_value("video", "fov", fov)
 		fullscreen = c.get_value("video", "fullscreen", fullscreen)
 		volume = c.get_value("audio", "volume", volume)

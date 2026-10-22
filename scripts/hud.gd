@@ -95,6 +95,8 @@ func build(c: Node) -> void:
 	menu.menu_pressed.connect(_to_menu)
 	menu.explore_pressed.connect(_explore)
 	Game.state_changed.connect(_on_state)
+	Game.settings_changed.connect(_apply_settings)
+	_apply_settings()
 	start_pos = city.player.global_position
 	start_yaw = city.player.rotation.y
 	if Game.test_mode or Game.skip_title:
@@ -115,6 +117,16 @@ func _label(parent: Control, pos: Vector2, sz: Vector2, align: int, fsize: int, 
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(l)
 	return l
+
+
+func _apply_settings() -> void:
+	if not Game.test_mode and city.player.has_method("apply_settings"):
+		city.player.apply_settings(Game.mouse_sensitivity, Game.invert_y, Game.fov)
+
+
+func _phone_up() -> bool:
+	var h = city.player.get("hands")
+	return h != null and h.has_method("is_phone_up") and h.is_phone_up()
 
 
 func _on_state(s: int) -> void:
@@ -215,6 +227,9 @@ func _process(dt: float) -> void:
 		else:
 			tip_label.text = ""
 	compass.nudge = stall > 20.0 and not goal_done
+	var up := _phone_up()
+	compass.visible = not up
+	dist_label.visible = not up
 	goal_show -= dt
 	goal_box.modulate.a = clampf(goal_show, 0.0, 1.0)
 	hint_show -= dt

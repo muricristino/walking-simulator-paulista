@@ -102,15 +102,16 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	_mat("asphalt", Tex.plate("res://assets/road/b_128.png"))
 	_mat("walk", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.mosaic(4))
 	_mat("paving", Tex.plate("res://assets/props/concrete.png"))
-	_mat("ground", Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
+	_mat("ground", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
 	_mat("curb", Tex.flat(Color(0.62, 0.6, 0.58), 8, 0.03, 0.3, 6))
 	var mroot: Node3D = null
 	if use_models and models.available():
 		mroot = models.build()
 	_terrain(skip_near_paulista)
 	_street()
-	for c in data.cross:
-		_cross(c)
+	if not models.available():
+		for c in data.cross:
+			_cross(c)
 	for k in tools:
 		var mi := MeshInstance3D.new()
 		mi.mesh = tools[k].commit()

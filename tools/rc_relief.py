@@ -1,7 +1,7 @@
 import json, math, sys
 
-path = sys.argv[1]
-d = json.load(open(path))
+src, path = sys.argv[1], sys.argv[2]
+d = json.load(open(src))
 st = d["street"]
 
 
@@ -60,18 +60,29 @@ def delta(q):
     return (target(p[0]) - oldf(p)) * fade
 
 
+JUNCTIONS = [(-138.77, -327.14), (-409.19, -312.75)]
+
+
+def flatten(q, y):
+    for j in JUNCTIONS:
+        w = min(max((math.dist(q, j) - 45.0) / 65.0, 0.0), 1.0)
+        w = w * w * (3 - 2 * w)
+        y = target(j[0]) * (1 - w) + y * w
+    return y
+
+
 g = d["grid"]
 h = g["h"]
 for j in range(g["nz"]):
     for i in range(g["nx"]):
         q = (g["x0"] + i * g["step"], g["z0"] + j * g["step"])
-        h[j * g["nx"] + i] = round(h[j * g["nx"] + i] + delta(q), 2)
+        h[j * g["nx"] + i] = round(flatten(q, h[j * g["nx"] + i] + delta(q)), 2)
 for b in d["buildings"]:
     c = (sum(p[0] for p in b["p"]) / len(b["p"]), sum(p[1] for p in b["p"]) / len(b["p"]))
-    b["y"] = round(b["y"] + delta(c), 2)
+    b["y"] = round(flatten(c, b["y"] + delta(c)), 2)
 for c in d["cross"]:
     for q in c["pts"]:
-        q["y"] = round(q["y"] + delta(q["p"]), 2)
+        q["y"] = round(flatten(q["p"], q["y"] + delta(q["p"])), 2)
 for s in dense:
     s["y"] = round(target(s["p"][0]), 2)
 d["street"] = dense

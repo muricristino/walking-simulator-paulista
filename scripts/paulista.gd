@@ -998,12 +998,42 @@ func _furniture() -> void:
 		solid(Vector3(19.0, 1.8, -26.0), Vector3(0.15, 3.6, 0.15))
 		_place(props.street_sign(Vector3(19.0, WALK_H, -26.0)), Transform3D.IDENTITY)
 	_banca(Vector3(26.5, WALK_H, -36.0))
+	_banca_rio(Vector3(-27.0, WALK_H, Layout.RIO_GAP.y + 9.5))
 	for bz in [-20.0, -27.0, -58.0, -66.0, -74.0, -82.0, -90.0]:
 		if not Layout.is_clear(-23.0, bz, 1.0):
 			continue
 		_place(props.bench(), Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-23.0, WALK_H, bz)))
 		solid(Vector3(-23.0, WALK_H + 0.22, bz), Vector3(0.6, 0.44, 1.8))
 		solid(Vector3(-23.0 + BENCH_BACK, WALK_H + 0.65, bz), Vector3(0.1, 0.5, 1.8))
+
+
+func _banca_rio(p: Vector3) -> void:
+	var rc := "res://assets/rioclaro/tex/"
+	if not M.has("banca_steel"):
+		for k in [["banca_steel", "steel"], ["banca_front", "banca"], ["banca_sign", "banca_sign"]]:
+			var t := Tex.plate(rc + k[1] + ".png")
+			M[k[0]] = mat(t, Color.WHITE, t if k[0] == "banca_front" else null, 0.45 if k[0] == "banca_front" else 0.0)
+			geo.add_mat(k[0], M[k[0]])
+	var L := 6.6
+	var W := 2.9
+	var H := 3.1
+	geo.box("banca_steel", p + Vector3(0, H * 0.5, 0), Vector3(W, H, L), Vector2(2.0, 3.1))
+	solid(p + Vector3(0, H * 0.5, 0), Vector3(W, H, L))
+	var x := p.x + W * 0.5 + 0.03
+	var a := Vector3(x, p.y + 0.4, p.z + 3.2)
+	var b := Vector3(x, p.y + 0.4, p.z - 3.2)
+	geo.quad("banca_front", a, b, b + Vector3(0, 2.6, 0), a + Vector3(0, 2.6, 0), Vector3.RIGHT, Vector2(6.4, 2.6))
+	geo.box("concrete", p + Vector3(0.15, H + 0.28, 0), Vector3(3.2, 0.55, 6.9), Vector2(2, 2))
+	var xs := p.x + 1.78
+	var sa := Vector3(xs, p.y + H + 0.04, p.z + 3.3)
+	var sb := Vector3(xs, p.y + H + 0.04, p.z - 3.3)
+	geo.quad("banca_sign", sa, sb, sb + Vector3(0, 0.48, 0), sa + Vector3(0, 0.48, 0), Vector3.RIGHT, Vector2(6.6, 0.48))
+	var ol := OmniLight3D.new()
+	ol.position = p + Vector3(2.4, 2.4, 0)
+	ol.light_color = Color(0.9, 0.95, 1.0)
+	ol.light_energy = 1.0
+	ol.omni_range = 6.0
+	world.add_child(ol)
 
 
 func _banca(p: Vector3) -> void:

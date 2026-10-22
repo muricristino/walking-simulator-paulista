@@ -13,6 +13,7 @@ const RADIUS := 0.33
 const GAP := 0.7
 const GAP_PLAYER := 0.8
 const NEAR := 70.0
+const CLOSE := 25.0
 const SHOW := 160.0
 const STATIC_ANIM := 35.0
 const PAULISTA_WALKERS := 80
@@ -82,8 +83,9 @@ func _physics_process(dt: float) -> void:
 	frame += 1
 	for i in walkers.size():
 		var w: Dictionary = walkers[i]
-		if w.near or (frame + i) % 5 == 0:
-			_update(w, dt if w.near else dt * 5.0, pp)
+		var every: int = 1 if w.close else (2 if w.near else (5 if w.shown else 12))
+		if (frame + i) % every == 0:
+			_update(w, dt * every, pp)
 	lod_t -= dt
 	if lod_t <= 0.0:
 		lod_t = 0.4
@@ -524,7 +526,7 @@ func walker(l: RefCounted, s: float, dir: float, tp: float, p: Vector3) -> Dicti
 		"speed": v0, "v": v0 * 0.5, "h": h, "want_h": h, "want_v": v0, "walking": true,
 		"pos": Vector2(p.x, p.z), "vel": Vector2.ZERO, "y": p.y, "yt": rng.randf() * 0.3,
 		"st": rng.randf() * 0.15, "state": "walk", "timer": rng.randf_range(8.0, 30.0),
-		"stuck": 0.0, "cool": 0.0, "near": true, "prog_t": 0.0, "prog_s": s, "fails": 0, "anim": "walk", "spot": Vector3.ZERO, "face": 0.0, "delay": 0.0,
+		"stuck": 0.0, "cool": 0.0, "near": true, "close": true, "shown": true, "prog_t": 0.0, "prog_s": s, "fails": 0, "anim": "walk", "spot": Vector3.ZERO, "face": 0.0, "delay": 0.0,
 	}
 	walkers.append(w)
 	return w
@@ -622,10 +624,11 @@ func _update(w: Dictionary, dt: float, pp: Vector3) -> void:
 	var p: Vector2 = w.pos
 	var d2 := Vector2(pp.x - p.x, pp.z - p.y).length_squared()
 	var near := d2 < NEAR * NEAR
+	w.close = d2 < CLOSE * CLOSE
 	w.st -= dt
 	w.cool = maxf(float(w.cool) - dt, 0.0)
 	if w.st <= 0.0:
-		w.st = 0.15 if near else 1.0
+		w.st = (0.15 if w.close else 0.25) if near else 1.0
 		_think(w, pp, w.st)
 	_move(w, dt, pp)
 	var n: Node3D = w.node
@@ -635,7 +638,8 @@ func _update(w: Dictionary, dt: float, pp: Vector3) -> void:
 		w.near = near
 		if ap:
 			ap.active = near
-	n.visible = d2 < SHOW * SHOW
+	w.shown = d2 < SHOW * SHOW
+	n.visible = w.shown
 	var moving: bool = w.v > 0.12
 	var want: String = "walk" if moving else ("phone" if w.state == "pause" and c.anims.has("phone") else "idle")
 	if want != w.anim:

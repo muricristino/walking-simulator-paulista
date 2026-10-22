@@ -46,7 +46,12 @@ func show_page(p: String) -> void:
 	if p != "":
 		var b := _first_button(pages[p])
 		if b:
-			b.grab_focus.call_deferred()
+			_focus.call_deferred(b)
+
+
+func _focus(b: Control) -> void:
+	if is_instance_valid(b) and b.is_inside_tree() and b.is_visible_in_tree():
+		b.grab_focus()
 
 
 func _first_button(n: Node) -> Control:

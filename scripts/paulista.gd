@@ -193,12 +193,14 @@ func _segments(cuts: Array, z0: float, z1: float) -> Array:
 	var segs := []
 	var cur := z0
 	for c in cuts:
+		if cur >= z1:
+			break
 		if c.x > cur:
 			segs.append(Vector2(cur, minf(c.x, z1)))
 		cur = maxf(cur, c.y)
 	if cur < z1:
 		segs.append(Vector2(cur, z1))
-	return segs
+	return segs.filter(func(v: Vector2) -> bool: return v.y - v.x > 0.01)
 
 
 func bounds() -> void:
@@ -398,7 +400,8 @@ func _slab(x0: float, x1: float, z0: float, z1: float, sd: int) -> void:
 
 func _buildings() -> void:
 	_slab(30.0, XV, ZB_VIS, ZF_VIS, 1)
-	_slab(-66.0, -30.0, -166.0, ZF_VIS, -1)
+	_slab(-66.0, -30.0, -166.0, MASP_Z.x - 6.0, -1)
+	_slab(-66.0, -30.0, MASP_Z.y + 6.0, ZF_VIS, -1)
 	_slab(-XV, -66.0, VALLEY.end.y, ZF_VIS, -1)
 	_slab(-XV, -66.0, -166.0, VALLEY.position.y, -1)
 	_slab(-XV, -30.0, ZB_VIS, -452.0, -1)
@@ -425,7 +428,7 @@ func _buildings() -> void:
 
 
 func _rio_cut(w: Vector3, lim: float) -> bool:
-	return w.x > lim and w.z > RIO_BOX.x and w.z < RIO_BOX.y and not (w.z > Layout.RIO_GAP.x - 2.0 and w.z < Layout.RIO_GAP.y + 2.0)
+	return w.x > lim and w.z > RIO_BOX.x and w.z < RIO_BOX.y
 
 
 func _trim_rio() -> Array:
@@ -683,8 +686,24 @@ func _valley() -> void:
 	var t1 := VALLEY_ROAD.x + VALLEY_ROAD.y - 1.0
 	geo.quad("dark", Vector3(-65.95, yw, t1), Vector3(-65.95, yw, t0), Vector3(-65.95, yw + 5.6, t0), Vector3(-65.95, yw + 5.6, t1), Vector3.LEFT, Vector2(4, 4))
 	geo.box("concrete", Vector3(-66.4, yw + 6.3, VALLEY_ROAD.x), Vector3(0.8, 1.4, VALLEY_ROAD.y * 2.0 + 1.0), Vector2(2, 1))
+	var tx := -72.0
+	while tx > -300.0:
+		for e in [-1.0, 1.0]:
+			var tz: float = VALLEY_ROAD.x + e * (VALLEY_ROAD.y + rng.randf_range(3.0, 9.0))
+			_place(props.tree(Vector3(tx, _valley_y(tx), tz), rng.randf_range(1.2, 1.7), rng.randi()), Transform3D.IDENTITY)
+		tx -= rng.randf_range(9.0, 15.0)
 	var lx := -80.0
+	var lit := 0
 	while lx > -330.0:
+		if lit < 4:
+			var ol := OmniLight3D.new()
+			ol.position = Vector3(lx, _valley_y(lx) + 7.0, VALLEY_ROAD.x)
+			ol.light_color = Color(1.0, 0.66, 0.36)
+			ol.light_energy = 8.0
+			ol.omni_range = 22.0
+			world.add_child(ol)
+			lights.append(ol)
+			lit += 1
 		for e in [-1.0, 1.0]:
 			var lz: float = VALLEY_ROAD.x + e * (VALLEY_ROAD.y + 1.0)
 			var y := _valley_y(lx)
@@ -743,7 +762,8 @@ func _stairs() -> void:
 		var top := 0.16 - (i + 1) * rise
 		var za := z1 - (i + 1) * run
 		var zb := z1 - i * run
-		geo.box("wallc", Vector3((x0 + x1) * 0.5, (top + depth - 0.2) * 0.5, (za + zb) * 0.5), Vector3(x1 - x0 - 0.2, top - depth + 0.2, zb - za), Vector2(1.5, 1.5))
+		geo.box("curb", Vector3((x0 + x1) * 0.5, (top + depth - 0.2) * 0.5, (za + zb) * 0.5), Vector3(x1 - x0 - 0.2, top - depth + 0.2, zb - za), Vector2(1.5, 0.2))
+		geo.box("dark", Vector3((x0 + x1) * 0.5, top + 0.005, za + 0.04), Vector3(x1 - x0 - 0.3, 0.012, 0.06), Vector2(1, 1))
 	geo.ground("wallc", x0, x1, z0, z1 - n * run, depth, Vector2(1.5, 1.5))
 	geo.quad("wallc", Vector3(x0, depth, z0), Vector3(x0, depth, z1), Vector3(x0, 0.16, z1), Vector3(x0, 0.16, z0), Vector3.RIGHT, Vector2(3, 3))
 	geo.quad("wallc", Vector3(x1, depth, z1), Vector3(x1, depth, z0), Vector3(x1, 0.16, z0), Vector3(x1, 0.16, z1), Vector3.LEFT, Vector2(3, 3))
@@ -751,6 +771,12 @@ func _stairs() -> void:
 	geo.quad("wallc", Vector3(x0, depth, z0), Vector3(x1, depth, z0), Vector3(x1, 0.16, z0), Vector3(x0, 0.16, z0), Vector3.BACK, Vector2(3, 3))
 	geo.quad("dark", Vector3(x0 + 1.0, depth, z0 + 0.02), Vector3(x1 - 1.0, depth, z0 + 0.02), Vector3(x1 - 1.0, depth + 2.4, z0 + 0.02), Vector3(x0 + 1.0, depth + 2.4, z0 + 0.02), Vector3.BACK, Vector2(4, 2.4))
 	geo.box("lamp", Vector3((x0 + x1) * 0.5, depth + 2.8, z0 + 0.1), Vector3(1.2, 0.12, 0.12), Vector2(1, 1))
+	var pl := OmniLight3D.new()
+	pl.position = Vector3((x0 + x1) * 0.5, depth + 2.4, z0 + 1.0)
+	pl.light_color = Color(0.95, 0.9, 0.8)
+	pl.light_energy = 2.5
+	pl.omni_range = 9.0
+	world.add_child(pl)
 	var rail := [[Vector3(x0, 0, z0), Vector3(x1, 0, z0)], [Vector3(x0, 0, z0), Vector3(x0, 0, z1)], [Vector3(x1, 0, z0), Vector3(x1, 0, z1)], [Vector3(x0, 0, z1), Vector3(x1, 0, z1)]]
 	for r in rail:
 		var a: Vector3 = r[0]

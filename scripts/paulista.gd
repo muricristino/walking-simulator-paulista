@@ -979,7 +979,7 @@ func _furniture() -> void:
 			var cz: float = s.z + s.half + 1.2
 			_corner_sign(sd * 16.9, cz, SIGNS + name + ".png", Vector3.BACK)
 			if not _stub_open(s, sd):
-				_barrier(sd * 31.3, sd * 31.3, s.z - s.half, s.z + s.half, Vector3(sd, 0, 0))
+				_barrier(sd * 31.3, sd * 31.3, s.z - s.half - s.walk, s.z + s.half + s.walk, Vector3(sd, 0, 0))
 			elif absf(_street_end(s, sd)) > STUB:
 				var hw: float = s.half + s.walk
 				_barrier(sd * (STUB - 0.6), sd * (STUB - 0.6), s.z - hw, s.z + hw, Vector3(sd, 0, 0))

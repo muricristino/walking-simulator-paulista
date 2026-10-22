@@ -3,6 +3,7 @@ extends Node
 const Tex := preload("res://scripts/tex.gd")
 const Geo := preload("res://scripts/geo.gd")
 const Player := preload("res://scripts/player.gd")
+const Autowalk := preload("res://scripts/autowalk.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(320, 240)
 const CROSS := [-150.0, -380.0, -560.0]
@@ -602,10 +603,18 @@ func _people() -> void:
 func _camera() -> void:
 	var args := OS.get_cmdline_user_args()
 	player = Player.new()
-	player.auto = args.has("--shot")
+	player.auto = args.has("--autowalk") or args.has("--shot")
 	world.add_child(player)
 	player.setup(Vector3(21.5, 0.15, -12.0), Vector3(-14.0, 9.0, -100.0))
 	player.capture(true)
+	var i := args.find("--autowalk")
+	if i >= 0 and i + 1 < args.size():
+		var aw := Autowalk.new()
+		aw.player = player
+		aw.vp = vp
+		aw.out = args[i + 1]
+		DirAccess.make_dir_recursive_absolute(aw.out)
+		add_child(aw)
 
 
 func _screen() -> void:

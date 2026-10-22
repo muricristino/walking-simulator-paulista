@@ -32,7 +32,7 @@ func _ready() -> void:
 	if di >= 0 and di + 1 < args.size():
 		dist = float(args[di + 1])
 	vp = SubViewport.new()
-	vp.size = Vector2i(320, 240)
+	vp.size = Vector2i(640, 480)
 	vp.msaa_3d = Viewport.MSAA_DISABLED
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	vp.audio_listener_enable_3d = false

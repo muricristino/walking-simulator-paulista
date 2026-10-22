@@ -6,5 +6,5 @@ mkdir -p "$PROJ/prints"
 rm -f "$OUT" "$PROJ/prints/log.txt" "$PROJ/prints/err.txt"
 open -W -n -j -g -a /Applications/Godot.app --stdout "$PROJ/prints/log.txt" --stderr "$PROJ/prints/err.txt" --args --path "$PROJ" --audio-driver Dummy --position 20000,20000 res://main.tscn -- --shot "$OUT"
 if [ -n "$2" ]; then
-	magick "$OUT" -filter point -resize 400% "$2"
+	magick "$OUT" -filter point -resize 200% "$2"
 fi

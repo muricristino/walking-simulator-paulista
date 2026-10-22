@@ -6,7 +6,7 @@ uniform sampler2D glow_tex : source_color, filter_nearest, repeat_enable;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform vec3 emit = vec3(0.0);
 uniform float glow = 0.0;
-uniform vec2 snap_res = vec2(320.0, 240.0);
+uniform vec2 snap_res = vec2(400.0, 300.0);
 uniform float affine = 0.6;
 uniform float unshaded = 0.0;
 uniform float squash = 0.0;

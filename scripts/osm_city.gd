@@ -13,6 +13,9 @@ var mats := {}
 var glow := 0.3
 var tools := {}
 var rng := RandomNumberGenerator.new()
+var faces := PackedVector3Array()
+var zrange := Vector2(-INF, INF)
+var gaps := []
 
 
 func _init() -> void:
@@ -72,9 +75,22 @@ func _st(key: String) -> SurfaceTool:
 func build(path: String) -> Node3D:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
 	tools.clear()
+	faces = PackedVector3Array()
 	for b in data.buildings:
-		_building(b)
+		if _keep(b):
+			_building(b)
 	var root := Node3D.new()
+	if faces.size() > 0:
+		var body := StaticBody3D.new()
+		body.collision_layer = 1
+		body.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		var shape := ConcavePolygonShape3D.new()
+		shape.set_faces(faces)
+		shape.backface_collision = true
+		cs.shape = shape
+		body.add_child(cs)
+		root.add_child(body)
 	for k in tools:
 		var mi := MeshInstance3D.new()
 		mi.mesh = tools[k].commit()
@@ -82,6 +98,16 @@ func build(path: String) -> Node3D:
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
 	return root
+
+
+func _keep(b: Dictionary) -> bool:
+	for p in b.p:
+		if p[1] < zrange.x or p[1] > zrange.y:
+			return false
+		for g in gaps:
+			if absf(p[1] - g.x) < g.y and absf(p[0]) < 160.0:
+				return false
+	return true
 
 
 func _pick(kind: String, seed: int) -> String:
@@ -141,6 +167,10 @@ func _building(b: Dictionary) -> void:
 			side_style = style if faces_avenue else body
 		elif kind != "tower" and not faces_avenue and len > 7.0 and (seed + i) % 5 < 3:
 			side_style = empena
+		var A := Vector3(a.x, 0, a.y)
+		var C := Vector3(c.x, 0, c.y)
+		var hc := minf(h, 8.0)
+		faces.append_array([A, C, C + Vector3(0, hc, 0), A, C + Vector3(0, hc, 0), A + Vector3(0, hc, 0)])
 		var y0 := GROUND if has_ground else 0.0
 		var y1 := h - parapet
 		if has_ground:

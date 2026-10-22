@@ -16,6 +16,8 @@ var rng := RandomNumberGenerator.new()
 var faces := PackedVector3Array()
 var zrange := Vector2(-INF, INF)
 var gaps := []
+var yoff := 0.0
+var corridors := []
 
 
 func _init() -> void:
@@ -73,7 +75,10 @@ func _st(key: String) -> SurfaceTool:
 
 
 func build(path: String) -> Node3D:
-	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return build_data(JSON.parse_string(FileAccess.get_file_as_string(path)))
+
+
+func build_data(data: Dictionary) -> Node3D:
 	tools.clear()
 	faces = PackedVector3Array()
 	for b in data.buildings:
@@ -101,6 +106,17 @@ func build(path: String) -> Node3D:
 
 
 func _keep(b: Dictionary) -> bool:
+	for c in corridors:
+		var pts: Array = c[0]
+		var hw: float = c[1]
+		for p in b.p:
+			var q := Vector2(p[0], p[1])
+			for k in pts.size() - 1:
+				var a: Vector2 = pts[k]
+				var ab: Vector2 = pts[k + 1] - a
+				var t := clampf((q - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+				if q.distance_to(a + ab * t) < hw:
+					return false
 	for p in b.p:
 		if p[1] < zrange.x or p[1] > zrange.y:
 			return false
@@ -116,6 +132,7 @@ func _pick(kind: String, seed: int) -> String:
 
 
 func _building(b: Dictionary) -> void:
+	yoff = b.get("y", 0.0)
 	var seed: int = b.seed
 	rng.seed = seed
 	var h: float = b.h
@@ -167,9 +184,9 @@ func _building(b: Dictionary) -> void:
 			side_style = style if faces_avenue else body
 		elif kind != "tower" and not faces_avenue and len > 7.0 and (seed + i) % 5 < 3:
 			side_style = empena
-		var A := Vector3(a.x, 0, a.y)
-		var C := Vector3(c.x, 0, c.y)
-		var hc := minf(h, 8.0)
+		var A := Vector3(a.x, yoff - 2.0, a.y)
+		var C := Vector3(c.x, yoff - 2.0, c.y)
+		var hc := minf(h, 8.0) + 2.0
 		faces.append_array([A, C, C + Vector3(0, hc, 0), A, C + Vector3(0, hc, 0), A + Vector3(0, hc, 0)])
 		var y0 := GROUND if has_ground else 0.0
 		var y1 := h - parapet
@@ -194,10 +211,11 @@ func _building(b: Dictionary) -> void:
 
 func _wall(key: String, a0: Vector2, c0: Vector2, a1: Vector2, c1: Vector2, y0: float, y1: float, n: Vector3, u: float, len: float, tile: Vector2, col: Color, photo: bool) -> void:
 	var st := _st(key)
-	var A0 := Vector3(a0.x, y0, a0.y)
-	var C0 := Vector3(c0.x, y0, c0.y)
-	var A1 := Vector3(a1.x, y1, a1.y)
-	var C1 := Vector3(c1.x, y1, c1.y)
+	var y0b := y0 + yoff - (3.0 if y0 == 0.0 else 0.0)
+	var A0 := Vector3(a0.x, y0b, a0.y)
+	var C0 := Vector3(c0.x, y0b, c0.y)
+	var A1 := Vector3(a1.x, y1 + yoff, a1.y)
+	var C1 := Vector3(c1.x, y1 + yoff, c1.y)
 	var nn := (C0 - A0).cross(A1 - A0).normalized()
 	if nn.dot(n) < 0.0:
 		nn = -nn
@@ -227,7 +245,7 @@ func _roof(poly: PackedVector2Array, h: float, b: Dictionary) -> void:
 		st.set_color(Color(0.9, 0.9, 0.9, 0))
 		st.set_normal(Vector3.UP)
 		st.set_uv(p / 8.0)
-		st.add_vertex(Vector3(p.x, h - 0.6, p.y))
+		st.add_vertex(Vector3(p.x, h - 0.6 + yoff, p.y))
 	if h < 15.0 or b.style == "fiesp":
 		return
 	var mn := Vector2(INF, INF)
@@ -261,4 +279,4 @@ func _box(c: Vector2, s: Vector2, y: float, hh: float) -> void:
 		st.set_color(Color(0.8, 0.8, 0.8, 0))
 		st.set_normal(Vector3.UP)
 		st.set_uv(q / 4.0)
-		st.add_vertex(Vector3(q.x, y + hh, q.y))
+		st.add_vertex(Vector3(q.x, y + hh + yoff, q.y))

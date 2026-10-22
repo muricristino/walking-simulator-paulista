@@ -43,3 +43,8 @@
   - gazeta_c.png: "Imagem da Fundação Cásper Líbero - Gazeta.JPG" by Paulo De Sá Machado, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Imagem_da_Funda%C3%A7%C3%A3o_C%C3%A1sper_L%C3%ADbero_-_Gazeta.JPG
   - safra_c.png: "Banco Safra na Avenida Paulista 1.JPG" by Joehawkins, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Banco_Safra_na_Avenida_Paulista_1.JPG
   - center3_c.png: "Shopping Center 3.JPG" by Raphael Igor, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:Shopping_Center_3.JPG
+
+## Alameda Rio Claro (assets/osm/rioclaro.json)
+- Street, cross streets, buildings and points of interest: © OpenStreetMap contributors, ODbL 1.0, via Overpass API, converted by tools/osm_rioclaro.py
+- Elevation: Mapzen/AWS Terrain Tiles (terrarium, zoom 15, https://registry.opendata.aws/terrain-tiles/), derived from SRTM and other public sources; see https://github.com/tilezen/joerd/blob/master/docs/attribution.md
+- art/placa_rioclaro.png: drawn locally in the style of the São Paulo street sign

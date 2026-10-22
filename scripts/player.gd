@@ -114,7 +114,7 @@ func apply_settings(sens: float, invert: bool, fov: float) -> void:
 
 
 func capture(on: bool) -> void:
-	if auto:
+	if auto or (on and not Game.test_mode and not Game.input_enabled):
 		return
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if on else Input.MOUSE_MODE_VISIBLE
 
@@ -141,7 +141,8 @@ func _input(e: InputEvent) -> void:
 		if e.pressed:
 			match e.physical_keycode:
 				KEY_ESCAPE:
-					capture(false)
+					if Game.test_mode:
+						capture(false)
 				KEY_SPACE:
 					jump_q = BUFFER
 				KEY_E:

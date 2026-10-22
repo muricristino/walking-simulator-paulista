@@ -190,6 +190,7 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	var mroot: Node3D = null
 	if use_models and models.available():
 		mroot = models.build()
+		models.set_glow(0.18, false)
 	_terrain(skip_near_paulista)
 	_street()
 	if not models.available():

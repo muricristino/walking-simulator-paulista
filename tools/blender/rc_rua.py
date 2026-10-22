@@ -348,10 +348,9 @@ for s in POLES:
     a, b = frame(s, -SW - 0.4), frame(s, -SW + 1.6)
     k.beam("curb", (a[0], y + 8.3, a[1]), (b[0], y + 8.3, b[1]), 0.06, 4)
     tops.append([(a[0], y + 8.3, a[1]), (x, y + 8.9, z), (b[0], y + 8.3, b[1]), (x, y + 7.2, z)])
-    if s in (171.0, 236.0, 301.0, 366.0):
-        q = frame(s, -SW + 3.2)
-        k.beam("metal_grey", (x, y + 8.6, z), (q[0], y + 9.0, q[1]), 0.05, 4)
-        k.box("lamp", (q[0], y + 8.8, q[1]), (0.5, 0.18, 0.7), yaw_of(s), col=None)
+    q = frame(s, -SW + 3.2)
+    k.beam("metal_grey", (x, y + 8.6, z), (q[0], y + 9.0, q[1]), 0.05, 4)
+    k.box("lamp", (q[0], y + 8.8, q[1]), (0.5, 0.18, 0.7), yaw_of(s), col=None)
     k.box("metal_dark", (x, y + 6.6, z), (0.5, 0.6, 0.4), yaw_of(s), col=None)
 for ta, tb in zip(tops, tops[1:]):
     for pa, pb in zip(ta, tb):
@@ -446,4 +445,4 @@ for sd in (1, -1):
         u += 5.8
 PK.export("rc_parked")
 json.dump({"spots": spots}, open(os.path.join(OUTDIR, "rc_parking.json"), "w"), indent=0)
-json.dump({"range": [137, 420], "replaced": sorted(set(right + low + [127, 128, 133, 112, 114, 119, 109, 110]) | filled_over), "lamps": [list(P(s, -SW + 3.2, 8.5)) for s in (171.0, 236.0, 301.0, 366.0)], "tris": tris}, open(os.path.join(OUTDIR, "rc_rua.json"), "w"))
+json.dump({"range": [137, 420], "replaced": sorted(set(right + low + [127, 128, 133, 112, 114, 119, 109, 110]) | filled_over), "lamps": [list(P(s, -SW + 3.2, 8.5)) for s in POLES] + [list(P(s_e + 2.5, RT - 0.6, 3.2)) for s_e, kind in entries if kind == "guarita"], "tris": tris}, open(os.path.join(OUTDIR, "rc_rua.json"), "w"))

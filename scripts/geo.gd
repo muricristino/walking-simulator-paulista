@@ -107,5 +107,5 @@ func build(parent: Node) -> void:
 		parent.add_child(mi)
 
 
-func append(key: String, mesh: Mesh, xf: Transform3D) -> void:
-	_st(key).append_from(mesh, 0, xf)
+func tools_append(key: String, mesh: Mesh, surface: int, xf: Transform3D) -> void:
+	_st(key).append_from(mesh, surface, xf)

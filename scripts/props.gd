@@ -159,7 +159,7 @@ func street_sign(pos: Vector3) -> Node3D:
 	return root
 
 
-func shopfront(pos: Vector3, width: float) -> Node3D:
+func shopfront(pos: Vector3, width: float, upper := true, seed_off := 0) -> Node3D:
 	var root := Node3D.new()
 	root.position = pos
 	var h := 4.2
@@ -176,13 +176,13 @@ func shopfront(pos: Vector3, width: float) -> Node3D:
 	var signs := []
 	for i in bays:
 		var bx := x0 + i * 6.0
+		var kind := (i + seed_off) % 3
 		_quad(wall, Vector3(bx, h, 0), Vector3(bx + 0.5, h, 0), Vector3(bx + 0.5, 0, 0), Vector3(bx, 0, 0), Vector2(0, 0), Vector2(0.25, 2.0))
 		_quad(wall, Vector3(bx + 5.5, h, 0), Vector3(bx + 6.0, h, 0), Vector3(bx + 6.0, 0, 0), Vector3(bx + 5.5, 0, 0), Vector2(0, 0), Vector2(0.25, 2.0))
 		_quad(wall, Vector3(bx + 0.5, h, 0), Vector3(bx + 5.5, h, 0), Vector3(bx + 5.5, 3.2, 0), Vector3(bx + 0.5, 3.2, 0), Vector2(0, 0), Vector2(2.5, 0.5))
 		for side in [0.5, 5.5]:
 			_quad(wall, Vector3(bx + side, 3.2, 0), Vector3(bx + side, 3.2, -0.3), Vector3(bx + side, 0, -0.3), Vector3(bx + side, 0, 0), Vector2(0, 0), Vector2(0.15, 1.6))
 		_quad(wall, Vector3(bx + 0.5, 3.2, -0.3), Vector3(bx + 5.5, 3.2, -0.3), Vector3(bx + 5.5, 3.2, 0), Vector3(bx + 0.5, 3.2, 0), Vector2(0, 0), Vector2(2.5, 0.15))
-		var kind := i % 3
 		var face := [Vector3(bx + 0.5, 3.2, -0.3), Vector3(bx + 5.5, 3.2, -0.3), Vector3(bx + 5.5, 0, -0.3), Vector3(bx + 0.5, 0, -0.3)]
 		if kind == 0:
 			_quad(shut, face[0], face[1], face[2], face[3], Vector2(0, 0), Vector2(2.0, 1.3))
@@ -190,9 +190,11 @@ func shopfront(pos: Vector3, width: float) -> Node3D:
 			_quad(win, face[0], face[1], Vector3(bx + 5.5, 0.5, -0.3), Vector3(bx + 0.5, 0.5, -0.3), Vector2(0, 0), Vector2(1.0, 1.0))
 			_quad(wall, Vector3(bx + 0.5, 0.5, -0.3), Vector3(bx + 5.5, 0.5, -0.3), face[2], face[3], Vector2(0, 0), Vector2(2.5, 0.2))
 		signs.append([bx, i])
-	_quad(up, Vector3(x0, 20.0, 0), Vector3(-x0, 20.0, 0), Vector3(-x0, h, 0), Vector3(x0, h, 0), Vector2(0, 0), Vector2(width / 8.0, (20.0 - h) / 8.0))
+	if upper:
+		_quad(up, Vector3(x0, 20.0, 0), Vector3(-x0, 20.0, 0), Vector3(-x0, h, 0), Vector3(x0, h, 0), Vector2(0, 0), Vector2(width / 8.0, (20.0 - h) / 8.0))
 	root.add_child(_mi(wall, mat("concrete.png")))
-	root.add_child(_mi(up, mat("facade_upper.png")))
+	if upper:
+		root.add_child(_mi(up, mat("facade_upper.png")))
 	root.add_child(_mi(shut, mat("shutter.png")))
 	root.add_child(_mi(win, mat("window.png", false, Color(0.12, 0.1, 0.06))))
 	for s in signs:
@@ -200,5 +202,5 @@ func shopfront(pos: Vector3, width: float) -> Node3D:
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		var bx: float = s[0]
 		_quad(st, Vector3(bx + 0.9, 4.05, 0.12), Vector3(bx + 5.1, 4.05, 0.12), Vector3(bx + 5.1, 3.3, 0.12), Vector3(bx + 0.9, 3.3, 0.12))
-		root.add_child(_mi(st, mat("sign%d.png" % (s[1] % 4), false, Color(0.08, 0.07, 0.05))))
+		root.add_child(_mi(st, mat("sign%d.png" % ((s[1] + seed_off) % 4), false, Color(0.08, 0.07, 0.05))))
 	return root

@@ -30,3 +30,13 @@
 - window.png: crop of ambientCG Facade009 (https://ambientcg.com/view?id=Facade009), CC0 1.0
 - facade_upper.png: crop of ambientCG Facade013 (https://ambientcg.com/view?id=Facade013), CC0 1.0
 - sign0-3.png: generic shop names drawn locally over the concrete photo
+
+## Buildings (assets/osm, assets/buildings)
+- Footprints and heights: © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright), fetched via Overpass API and converted by tools/osm_to_game.py
+- Common facades from ambientCG (CC0 1.0): Facade002 (glass), Facade003 (glass2), Facade018A (brick), Facade020A (pillar), Facade017 (brise), with their emission maps where available; other night masks generated locally
+- Landmark photos from Wikimedia Commons, cropped, downscaled and posterized:
+  - conjunto_c.png (also the common 'conjunto' style): "Facade of the Conjunto Nacional cropped version.jpg" by Wilfredor, CC0, https://commons.wikimedia.org/wiki/File:Facade_of_the_Conjunto_Nacional_cropped_version.jpg
+  - fiesp_c.png: "FIESP building 52.jpg" by Mauro Cateb, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:FIESP_building_52.jpg
+  - gazeta_c.png: "Imagem da Fundação Cásper Líbero - Gazeta.JPG" by Paulo De Sá Machado, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Imagem_da_Funda%C3%A7%C3%A3o_C%C3%A1sper_L%C3%ADbero_-_Gazeta.JPG
+  - safra_c.png: "Banco Safra na Avenida Paulista 1.JPG" by Joehawkins, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:Banco_Safra_na_Avenida_Paulista_1.JPG
+  - center3_c.png: "Shopping Center 3.JPG" by Raphael Igor, CC BY-SA 3.0, https://commons.wikimedia.org/wiki/File:Shopping_Center_3.JPG

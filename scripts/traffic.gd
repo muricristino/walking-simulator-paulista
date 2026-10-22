@@ -15,6 +15,8 @@ const Z_HI := 380.0
 const PARK_GAP := 130.0
 const HIDE_FAR := 440.0
 const HIDE_NEAR := 300.0
+const NEAR_PLACE := 200.0
+const FAR_SIM := 460.0
 const VIS_RANGE := 460.0
 const ROAD_X := 16.3
 const ACC := 1.8
@@ -55,6 +57,8 @@ var parked := []
 var lanes := []
 var _obstacles := []
 var bus_stops := {-1: [], 1: []}
+var frame := 0
+var cam_z := 0.0
 
 
 func build(c: Node) -> void:
@@ -293,6 +297,8 @@ func _physics_process(dt: float) -> void:
 	lights.update(dt)
 	_gather()
 	var cam := _cam()
+	frame += 1
+	cam_z = cam.global_position.z if cam else 0.0
 	for lane in lanes:
 		_step_lane(lane, dt, cam)
 
@@ -309,6 +315,10 @@ func _step_lane(lane: Dictionary, dt: float, cam: Camera3D) -> void:
 	var s_end := _s_end(d)
 	for i in cars.size():
 		var m: Mover = cars[i]
+		var far := absf(m.s * d - cam_z) > FAR_SIM
+		if far and (frame + i) % 4 != 0:
+			continue
+		var h := dt * 4.0 if far else dt
 		var lead: Mover = cars[i - 1] if i > 0 else null
 		var front := m.s + m.half
 		var a := ACC * (1.0 - pow(m.v / m.v0, 4.0))
@@ -337,25 +347,26 @@ func _step_lane(lane: Dictionary, dt: float, cam: Camera3D) -> void:
 			limit = minf(limit, person - PERSON_GAP - 0.3 - m.half)
 		a = minf(a, _signal_acc(m, lead, front))
 		if m.bus:
-			a = minf(a, _bus_acc(m, front, dt))
+			a = minf(a, _bus_acc(m, front, h))
 		if touching:
 			m.v = 0.0
 			a = 0.0
-		m.v = clampf(m.v + maxf(a, -9.0) * dt, 0.0, m.v0)
-		var ns := m.s + m.v * dt
+		m.v = clampf(m.v + maxf(a, -9.0) * h, 0.0, m.v0)
+		var ns := m.s + m.v * h
 		if ns > limit:
 			ns = maxf(m.s, limit)
-			m.v = minf(m.v, maxf(0.0, (ns - m.s) / dt))
+			m.v = minf(m.v, maxf(0.0, (ns - m.s) / h))
 		m.s = ns
 		if person < INF and person - front < 12.0 and m.v < 0.3:
-			m.blocked += dt
+			m.blocked += h
 			if m.blocked > 1.5 and not m.honked:
 				m.honked = true
 				honk.emit(m.node)
 		else:
 			m.blocked = 0.0
 			m.honked = false
-		_place(m)
+		if absf(m.s * d - cam_z) < NEAR_PLACE or (frame + i) % 4 == 0:
+			_place(m)
 	_recycle(lane, cam)
 
 

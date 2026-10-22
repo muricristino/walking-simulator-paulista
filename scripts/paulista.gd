@@ -489,6 +489,8 @@ func _trim_rio() -> Array:
 	var strip := PackedVector2Array([Vector2(-34.5, RIO_BOX.x), Vector2(lim - 0.05, RIO_BOX.x), Vector2(lim - 0.05, RIO_BOX.y), Vector2(-34.5, RIO_BOX.y)])
 	var gap := PackedVector2Array([Vector2(-40.0, Layout.RIO_GAP.x - 2.0), Vector2(0.0, Layout.RIO_GAP.x - 2.0), Vector2(0.0, Layout.RIO_GAP.y + 2.0), Vector2(-40.0, Layout.RIO_GAP.y + 2.0)])
 	for i in rio.models.replaced:
+		if rio.models.closed.has(i):
+			continue
 		var b: Dictionary = rio.data.buildings[i]
 		var poly := PackedVector2Array()
 		var mx := -INF

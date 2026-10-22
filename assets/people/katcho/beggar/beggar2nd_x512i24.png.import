@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cop06tid4fi5a"
-path="res://.godot/imported/paintSkin04.png-90f8d7654db5393168f8b792410e4ff0.ctex"
+uid="uid://bchv26poprnop"
+path="res://.godot/imported/beggar2nd_x512i24.png-242a30ef859500dcbd6865ad3430bbe7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/people/katcho/johndoe/paintSkin04.png"
-dest_files=["res://.godot/imported/paintSkin04.png-90f8d7654db5393168f8b792410e4ff0.ctex"]
+source_file="res://assets/people/katcho/beggar/beggar2nd_x512i24.png"
+dest_files=["res://.godot/imported/beggar2nd_x512i24.png-242a30ef859500dcbd6865ad3430bbe7.ctex"]
 
 [params]
 

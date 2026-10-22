@@ -173,7 +173,7 @@ static func masp_glass(seed: int) -> Array:
 			if x % 3 == 0 or y == 0 or y == 8 or y == h - 1:
 				c = Color(0.2, 0.2, 0.22)
 			elif (y > 2 and y < 7) or (y > 10 and y < 15):
-				if rng.randf() < 0.5:
+				if rng.randf() < 0.3:
 					var lc := Color(1.0, 0.92, 0.75) * rng.randf_range(0.4, 0.7)
 					gl.set_pixel(x, y, lc)
 					c = c.lerp(lc, 0.5)
@@ -183,4 +183,20 @@ static func masp_glass(seed: int) -> Array:
 
 static func plate(path: String) -> ImageTexture:
 	var img := Image.load_from_file(ProjectSettings.globalize_path(path))
+	return _tex(img)
+
+
+static func magazines(seed: int) -> ImageTexture:
+	rng.seed = seed
+	var img := Image.create(48, 20, false, Image.FORMAT_RGB8)
+	img.fill(Color(0.85, 0.85, 0.8))
+	for row in 4:
+		var x := 0
+		while x < 48:
+			var w := rng.randi_range(3, 5)
+			var c := Color.from_hsv(rng.randf(), rng.randf_range(0.4, 0.9), rng.randf_range(0.5, 1.0))
+			for yy in range(row * 5, row * 5 + 4):
+				for xx in range(x, mini(x + w - 1, 48)):
+					img.set_pixel(xx, yy, _grain(c, 0.08))
+			x += w
 	return _tex(img)

@@ -56,6 +56,7 @@ var external_honk := false
 var rng := RandomNumberGenerator.new()
 var counts := {}
 var mix := {}
+var closed := false
 
 
 func build(c: Node) -> void:
@@ -81,7 +82,7 @@ func build(c: Node) -> void:
 
 
 func play_at(stream: AudioStream, pos: Vector3, volume_db := 0.0, bus := &"SFX", unit := 10.0, max_dist := 0.0) -> AudioStreamPlayer3D:
-	if not stream:
+	if not stream or closed:
 		return null
 	var p := _p3d(stream, volume_db, bus, unit, max_dist)
 	p.position = pos
@@ -98,7 +99,7 @@ func attach(node: Node3D, stream: AudioStream, volume_db := 0.0, bus := &"SFX") 
 
 
 func play_ui(stream: AudioStream, volume_db := 0.0, bus := &"UI") -> AudioStreamPlayer:
-	if not stream:
+	if not stream or closed:
 		return null
 	var p := AudioStreamPlayer.new()
 	p.stream = stream
@@ -412,7 +413,7 @@ func _on_player_bumped(body: Variant = null, speed: Variant = null) -> void:
 
 
 func _play_step(k: StringName, loud: float) -> void:
-	if not own_steps:
+	if not own_steps or closed:
 		return
 	own_steps.stream = step_stream(k)
 	own_steps.volume_db = STEP_DB.get(k, -11.0) + loud * 3.0
@@ -931,6 +932,7 @@ func snapshot() -> Dictionary:
 
 
 func shutdown() -> void:
+	closed = true
 	set_process(false)
 	set_physics_process(false)
 	var all: Array = find_children("*", "AudioStreamPlayer", true, false) + city.world.find_children("*", "AudioStreamPlayer3D", true, false)

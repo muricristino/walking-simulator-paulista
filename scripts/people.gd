@@ -442,8 +442,8 @@ func _pants_px(d: Dictionary, a: float, X: int, Y: int, front_fade: float) -> Co
 	if d.bottom == "jeans":
 		if (X + Y * 2) % 4 == 0:
 			c = _light(c, 0.07)
-		if nhi.get_noise_2d(X * 4.0, Y * 4.0) > 0.55:
-			c = _light(c, 0.25)
+		if nhi.get_noise_2d(X * 4.0, Y * 4.0) > 0.72:
+			c = _light(c, 0.1)
 		c = _light(c, front_fade * (0.18 + maxf(nlo.get_noise_2d(X * 6.0, Y * 6.0), 0.0) * 0.3))
 	return c
 

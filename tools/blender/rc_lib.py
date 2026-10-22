@@ -220,7 +220,7 @@ class Kit:
                     self.quad(mat, grid[j][i], grid[j][i2], grid[j + 1][i2], grid[j + 1][i], u0, v0, u1, v1)
 
     def leafball(self, core, leaf, c, rad, n, card, r):
-        self.blob(core, c, (rad[0] * 0.78, rad[1] * 0.7, rad[2] * 0.78), 7, 4, r)
+        self.blob(core, c, (rad[0] * 0.6, rad[1] * 0.55, rad[2] * 0.6), 7, 4, r)
         for k in range(n):
             th = r.uniform(0, 2 * math.pi)
             ph = math.acos(r.uniform(-0.55, 1.0))
@@ -238,8 +238,8 @@ class Kit:
         bark = {"ficus": "bark_ficus", "plane": "bark_plane", "sibi": "bark"}[kind]
         leaf = {"ficus": "cut__leaves_ficus", "plane": "cut__leaves_light", "sibi": "cut__leaves_dark"}[kind]
         core = "leaves_core_light" if kind == "plane" else "leaves_core"
-        th = {"ficus": 3.4, "plane": 5.5, "sibi": 4.5}[kind] * size * r.uniform(0.85, 1.15)
-        tr = {"ficus": 0.5, "plane": 0.22, "sibi": 0.3}[kind] * size
+        th = {"ficus": 4.4, "plane": 5.5, "sibi": 5.4}[kind] * size * r.uniform(0.85, 1.15)
+        tr = {"ficus": 0.36, "plane": 0.22, "sibi": 0.26}[kind] * size
         pts = [(x, y - 0.1, z)]
         cx, cz = x, z
         for k in range(3):

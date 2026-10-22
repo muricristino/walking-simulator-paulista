@@ -127,7 +127,7 @@ def fill(at, u0, lim, half, walkw, sides, seed):
             for (du, dn) in ((-w / 2, off0), (w / 2, off0), (w / 2, off0 + dep), (-w / 2, off0 + dep)):
                 corners.append((p[0] + d[0] * du + n[0] * dn * sd, p[1] + d[1] * du + n[1] * dn * sd))
             probes = corners + [((corners[0][0] + corners[2][0]) / 2, (corners[0][1] + corners[2][1]) / 2)]
-            ok = all(rio_dist(q) > 14 for q in probes) and not any(inside(q, pl) for q in probes for pl in POLYS) and not any(inside(c, probes[:4]) for pl in POLYS for c in pl)
+            ok = all(rio_dist(q) > 28 for q in probes) and not any(inside(q, pl) for q in probes for pl in POLYS) and not any(inside(c, probes[:4]) for pl in POLYS for c in pl)
             if ok:
                 for i, pl in LOWS:
                     if any(inside(q, pl) for q in probes) or any(inside(c, probes[:4]) for c in pl):
@@ -270,6 +270,16 @@ for i, idx in enumerate(right):
     cx = sum(p[0] for p in pts) / len(pts)
     cz = sum(p[1] for p in pts) / len(pts)
     y0 = street_y(cx, cz) - 0.5
+    if idx in (12, 13):
+        tower(k, pts, y0, max(b["h"], 22.0), "facade_green", tile=(8.0, 8.0), lobby="glass_dark", lobby_h=3.5)
+        for e in range(len(pts)):
+            pa, pb = pts[e], pts[(e + 1) % len(pts)]
+            L = math.dist(pa, pb)
+            for j in range(int(L / 3.0)):
+                f = (j + 0.5) / int(L / 3.0)
+                q = (pa[0] + (pb[0] - pa[0]) * f, pa[1] + (pb[1] - pa[1]) * f)
+                k.leafball("leaves_core", "cut__leaves_ficus", (q[0], y0 + 1.2, q[1]), (1.3, 1.1, 1.3), 5, 1.1, random.Random(idx * 100 + e * 10 + j))
+        continue
     tower(k, pts, y0, b["h"], texs[(idx * 7) % 4], tile=(8.0, 12.0) if texs[(idx * 7) % 4] != "res_grey" else (9.0, 12.0))
 low = [88, 85, 54, 86, 73, 82, 71, 51, 55, 63, 64, 67, 59]
 for idx in low:
@@ -325,7 +335,7 @@ for i, (s, t, kind, sz) in enumerate(trees):
     x, z = frame(s, t)
     y = walk(s, 0)
     sbox(k, "soil", s, t, y - 0.1, (1.2, 0.13, 1.6), col=None)
-    k.tree((x, y, z), sz, kind, seed=100 + i * 13, crown=(6.2 if kind == "ficus" else 5.4) * sz, lean=lean_to(s, -0.9 if t > 0 else 0.9))
+    k.tree((x, y, z), sz, kind, seed=100 + i * 13, crown=(4.9 if kind == "ficus" else 4.4) * sz, lean=lean_to(s, -0.9 if t > 0 else 0.9))
 for s in (186.0, 206.0):
     sbox(k, "planter", s, 6.0, walk(s, 0), (1.6, 1.0, 2.6), top="soil")
 

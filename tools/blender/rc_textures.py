@@ -422,7 +422,7 @@ def tent():
 
 def core():
     r = np.random.default_rng(31)
-    a = fill(64, 64, (0.12, 0.22, 0.09), 0.03, 0.05, 4)
+    a = fill(64, 64, (0.15, 0.26, 0.11), 0.03, 0.05, 4)
     for k in range(260):
         x, y = r.integers(0, 62), r.integers(0, 62)
         c = np.array([0.16, 0.30, 0.12]) * r.uniform(0.6, 1.3)
@@ -499,6 +499,26 @@ def lot():
     save("lot", a)
 
 
+def facade_green():
+    r = np.random.default_rng(41)
+    w, h = 128, 128
+    a = np.ones((h, w, 3)) * col((0.22, 0.23, 0.24))
+    a += r.normal(0, 0.02, (h, w, 1))
+    for y in range(0, h, 16):
+        a[y:y + 3, :] = col((0.55, 0.55, 0.53))
+        a[y + 3:y + 13, :] = col((0.10, 0.12, 0.13))
+        for x in range(0, w, 8):
+            a[y + 3:y + 13, x] = col((0.30, 0.31, 0.32))
+    for k in range(900):
+        x, y = r.integers(0, w - 3), r.integers(0, h - 6)
+        if (y % 16) > 6 and r.random() < 0.6:
+            continue
+        L = r.integers(2, 7)
+        c = np.array([0.20, 0.36, 0.13]) * r.uniform(0.6, 1.4)
+        a[y:y + L, x:x + r.integers(1, 4)] = c
+    save("facade_green", a)
+
+
 def copy(src, name, resize=None, mod=None):
     args = ["magick", src]
     if resize:
@@ -566,6 +586,9 @@ core()
 climber()
 signs()
 lot()
+facade_green()
+flat("glass_light", (0.62, 0.68, 0.70), 0.02)
+flat("awning_pink", (0.88, 0.70, 0.72), 0.02)
 copy(os.path.join(ROOT, "assets/road/b_128.png"), "asphalt")
 copy(os.path.join(ROOT, "assets/props/bark.png"), "bark")
 if DL:

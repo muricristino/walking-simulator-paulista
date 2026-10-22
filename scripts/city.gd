@@ -11,6 +11,7 @@ const RES := Vector2i(640, 480)
 const CROSS := [-150.0, -380.0, -560.0]
 const MASP_Z := Vector2(-131.0, -53.0)
 const SKIP := [[-1.0, -226.0, -184.0]]
+const ROAD := "b_128"
 
 var vp: SubViewport
 var world: Node3D
@@ -91,13 +92,18 @@ var M := {}
 
 func _materials() -> void:
 	var white := Tex.flat(Color(0.8, 0.8, 0.8), 8, 0.04, 0.2, 1)
-	M.asphalt = mat(Tex.asphalt(3))
+	M.asphalt = mat(Tex.plate("res://assets/road/%s.png" % ROAD)) if ROAD != "" else mat(Tex.asphalt(3))
 	M.mosaic = mat(Tex.mosaic(4))
 	M.concrete = mat(Tex.flat(Color(0.55, 0.53, 0.5), 16, 0.04, 0.4, 5))
 	M.curb = mat(Tex.flat(Color(0.62, 0.6, 0.58), 8, 0.03, 0.3, 6))
-	M.bike = mat(Tex.flat(Color(0.62, 0.12, 0.1), 16, 0.05, 0.5, 7))
-	M.paint = mat(white, Color(0.9, 0.9, 0.85))
-	M.paint_y = mat(white, Color(0.95, 0.75, 0.2))
+	if ROAD != "":
+		M.bike = mat(Tex.plate("res://assets/road/bike_red.png"))
+		M.paint = mat(Tex.plate("res://assets/road/paint_white.png"))
+		M.paint_y = mat(Tex.plate("res://assets/road/paint_yellow.png"))
+	else:
+		M.bike = mat(Tex.flat(Color(0.62, 0.12, 0.1), 16, 0.05, 0.5, 7))
+		M.paint = mat(white, Color(0.9, 0.9, 0.85))
+		M.paint_y = mat(white, Color(0.95, 0.75, 0.2))
 	M.red = mat(Tex.flat(Color(0.78, 0.07, 0.06), 16, 0.04, 0.35, 8))
 	M.slab = mat(Tex.flat(Color(0.42, 0.41, 0.4), 16, 0.04, 0.4, 9))
 	M.dark = mat(Tex.flat(Color(0.12, 0.12, 0.13), 8, 0.02, 0.2, 10))

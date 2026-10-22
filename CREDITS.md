@@ -4,7 +4,10 @@
 - Author: Katcho (https://katcho.itch.io/)
 - Source: https://katcho.itch.io/free-characters
 - License: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
-- Used: Henry, mob01, beggar (Mr Grease, both textures), Granny, Gramps
+- Used: Henry, mob01, beggar (Mr Grease, both textures), Granny, Gramps, JohnDoe (Hehe folder; paintSkin, paintSkin03), female_z with the six clean female_base_00x skins (female_zombies folder), male_z with male_z01 (male_zombie folder), Nanzy (Popcorn folder)
+- The zombie walk/idle clips are not used: female_z, male_z and the phone pose get animations retargeted at load from Nanzy and mob01 (scripts/katcho.gd)
+- var_*.png: recolored clothing variants of the textures above, made by tools/people_variants.gd
+- skin.json: bind poses read from the .dae files by tools/katcho_skin.py
 
 ## PS2 Styled Characters (assets/people/wobble)
 - Author: Wobble Blocks (@WobbleBlocks)

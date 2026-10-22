@@ -7,6 +7,9 @@ var plan := []
 var i := 0
 var left := 0.0
 var shooting := false
+var stuck := 0.0
+var nudge := 0.0
+var last := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -50,6 +53,7 @@ func _begin() -> void:
 func _physics_process(dt: float) -> void:
 	if shooting or i >= plan.size():
 		return
+	_unstick(dt)
 	left -= dt
 	if left > 0.0:
 		return
@@ -64,3 +68,21 @@ func _physics_process(dt: float) -> void:
 		shooting = false
 	i += 1
 	_begin()
+
+
+func _unstick(dt: float) -> void:
+	var want: Vector2 = plan[i].get("move", Vector2.ZERO)
+	var pos := player.global_position
+	var moved := Vector2(pos.x - last.x, pos.z - last.z).length()
+	last = pos
+	if want.length() < 0.1:
+		stuck = 0.0
+		return
+	if nudge > 0.0:
+		nudge -= dt
+		player.sim.move = Vector2(1.0, 0.2) if nudge > 0.0 else want
+		return
+	stuck = stuck + dt if moved < 0.6 * dt else 0.0
+	if stuck > 0.25:
+		stuck = 0.0
+		nudge = 0.5

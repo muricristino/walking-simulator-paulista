@@ -57,3 +57,21 @@
   - bark.png: copy of assets/props/bark.png (ambientCG Bark004, CC0 1.0)
   - placa_*.png and banca_sign.png: text drawn locally with ImageMagick and system fonts (Arial Narrow Bold, Times New Roman Bold)
   - bark_ficus.png: ambientCG Bark012 (https://ambientcg.com/view?id=Bark012), CC0 1.0, downscaled and darkened
+
+## Suspicious Car (assets/cars/moidev)
+- Author: MoiDev (https://moi0210.itch.io/)
+- Source: https://moi0210.itch.io/a-suspicious-car-for-your-projects
+- License: CC0 1.0
+- Used: Suspicious Car.obj (renamed sedan.obj) and its 6 color textures; front plate repainted as Mercosul
+
+## PSX Style Cars (assets/cars/ggbot)
+- Author: GGBotNet (https://ggbot.itch.io/)
+- Source: https://ggbot.itch.io/psx-style-cars
+- License: CC0 1.0
+- Used: Car 02, Car 03, Car 05, Car 05 Taxi, Wheel (OBJ + PNG)
+
+## German PSX Car (assets/cars/sunfl0w)
+- "GermanCar" by Luca Anthony Schwarz (sunfl0w, https://sunfl0w.itch.io/)
+- Source: https://sunfl0w.itch.io/german-psx-car
+- License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+- Used: GermanCar.fbx, GermanCarTexture.png

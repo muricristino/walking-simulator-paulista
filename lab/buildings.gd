@@ -9,6 +9,8 @@ const CAMS := [
 	[Vector3(-20.0, 1.75, -300.0), Vector3(20.0, 30.0, -360.0)],
 	[Vector3(20.0, 1.75, -640.0), Vector3(-25.0, 40.0, -740.0)],
 	[Vector3(-20.0, 1.75, 300.0), Vector3(20.0, 30.0, 370.0)],
+	[Vector3(25.0, 1.7, -230.0), Vector3(36.0, 9.0, -270.0)],
+	[Vector3(-24.0, 1.7, -420.0), Vector3(-36.0, 10.0, -460.0)],
 ]
 
 var vp: SubViewport
@@ -142,13 +144,13 @@ func _time() -> void:
 		sky_mat.set_shader_parameter("mid", Vector3(0.32, 0.16, 0.34))
 		sky_mat.set_shader_parameter("horizon", Vector3(1.0, 0.48, 0.24))
 		env.ambient_light_color = Color(0.36, 0.3, 0.5)
-		env.ambient_light_energy = 0.55
+		env.ambient_light_energy = 0.8
 		env.fog_light_color = Color(0.5, 0.28, 0.36)
 		sun.light_color = Color(1.0, 0.55, 0.32)
 		sun.light_energy = 0.55
 		fill.light_color = Color(0.45, 0.5, 0.85)
 		fill.light_energy = 0.25
-		osm.set_glow(0.12)
+		osm.set_glow(0.18)
 	for l in lamps:
 		l.light_energy = 12.0 if noite else 7.0
 	lamp_mat.set_shader_parameter("emit", Vector3(2.2, 1.2, 0.45) if noite else Vector3(1.4, 0.9, 0.45))
@@ -175,6 +177,9 @@ func _street() -> void:
 	g.ground("asphalt", -16, 16, z0, z1, 0.0, Vector2(3.5, 3.5), 8.0)
 	g.ground("mosaic", 16, 34, z0, z1, 0.15, Vector2(0.8, 0.8), 8.0)
 	g.ground("mosaic", -34, -16, z0, z1, 0.15, Vector2(0.8, 0.8), 8.0)
+	g.add_mat("ground", _mat(Tex.plate("res://assets/road/b_128.png")))
+	g.ground("ground", 34, 260, z0, z1, 0.05, Vector2(3.5, 3.5), 40.0)
+	g.ground("ground", -260, -34, z0, z1, 0.05, Vector2(3.5, 3.5), 40.0)
 	var z := z1
 	while z > z0:
 		for lx in [5.5, 9.0, 12.5, -5.5, -9.0, -12.5]:
@@ -211,8 +216,7 @@ func _build() -> void:
 	for c in holder.get_children():
 		c.queue_free()
 	if novo:
-		var roof := _mat(Tex.flat(Color(0.3, 0.29, 0.28), 16, 0.05, 0.5, 14))
-		holder.add_child(osm.build("res://assets/osm/paulista.json", roof))
+		holder.add_child(osm.build("res://assets/osm/paulista.json"))
 		_antenna(Vector3(-60.0, 85.0, -755.0), 70.0)
 	else:
 		_atual()

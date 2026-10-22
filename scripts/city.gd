@@ -7,11 +7,11 @@ const Autowalk := preload("res://scripts/autowalk.gd")
 const People := preload("res://scripts/people.gd")
 const Katcho := preload("res://scripts/katcho.gd")
 const Props := preload("res://scripts/props.gd")
+const OsmCity := preload("res://scripts/osm_city.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(640, 480)
 const CROSS := [-150.0, -380.0, -560.0]
 const MASP_Z := Vector2(-131.0, -53.0)
-const SKIP := [[-1.0, -226.0, -184.0]]
 const ROAD := "b_128"
 
 var vp: SubViewport
@@ -144,7 +144,7 @@ func _environment() -> void:
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.36, 0.3, 0.5)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.75
 	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_DEPTH
@@ -264,125 +264,17 @@ func _raised(key: String, xa: float, xb: float, z0: float, z1: float, h: float, 
 	geo.quad("curb", Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, h, z0), Vector3(x0, h, z0), Vector3.FORWARD, Vector2(2, 0.5))
 
 
-var bld_count := 0
-var palettes := [
-	[0, Color(0.32, 0.36, 0.38), Color(0.16, 0.26, 0.32)],
-	[1, Color(0.62, 0.58, 0.5), Color(0.14, 0.16, 0.18)],
-	[2, Color(0.55, 0.5, 0.44), Color(0.12, 0.13, 0.15)],
-	[3, Color(0.2, 0.22, 0.25), Color(0.1, 0.18, 0.22)],
-	[1, Color(0.48, 0.38, 0.3), Color(0.12, 0.12, 0.13)],
-	[0, Color(0.25, 0.28, 0.3), Color(0.2, 0.3, 0.3)],
-	[2, Color(0.7, 0.68, 0.62), Color(0.15, 0.15, 0.17)],
-	[3, Color(0.18, 0.2, 0.18), Color(0.12, 0.2, 0.16)],
-]
-
-
-func _building(cx: float, cz: float, w: float, d: float, h: float, antenna: bool) -> void:
-	bld_count += 1
-	var key := "bld%d" % bld_count
-	var p: Array = palettes[rng.randi() % palettes.size()]
-	var cols := maxi(4, int(maxf(w, d) / 3.0))
-	var rows := maxi(4, int(h / 3.6))
-	var t := Tex.facade(100 + bld_count, cols, rows, p[0], p[1], p[2], rng.randf_range(0.2, 0.5))
-	geo.add_mat(key, mat(t[0], Color.WHITE, t[1], 1.0))
-	geo.box(key, Vector3(cx, h * 0.5, cz), Vector3(w, h, d), Vector2(cols * 3.0, rows * 3.6), Vector2.ZERO, 10.0, "roof")
-	solid(Vector3(cx, h * 0.5, cz), Vector3(w, h, d))
-	if rng.randf() < 0.5:
-		geo.box("roof", Vector3(cx + rng.randf_range(-w, w) * 0.2, h + 2.5, cz + rng.randf_range(-d, d) * 0.2), Vector3(w * 0.4, 5.0, d * 0.4), Vector2(4, 4))
-	var face := cx - signf(cx) * w * 0.5
-	if absf(face) < 34.0 and d > 12.0:
-		var shop := props.shopfront(Vector3.ZERO, d - 1.0, false, bld_count)
-		_place(shop, Transform3D(Basis(Vector3.UP, -signf(cx) * PI * 0.5), Vector3(face + signf(cx) * -0.02, 0.15, cz)))
-	if antenna:
-		_antenna(Vector3(cx + rng.randf_range(-w, w) * 0.25, h, cz + rng.randf_range(-d, d) * 0.25), rng.randf_range(22, 50), rng.randf() < 0.35)
-
-
-func _antenna(base: Vector3, height: float, striped: bool) -> void:
-	var key := "tower" if striped else "metal"
-	var s := height * 0.07 + 1.0
-	var legs := [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]
-	for l in legs:
-		var a := base + Vector3(l.x * s, 0, l.y * s)
-		var b := base + Vector3(l.x * 0.25, height, l.y * 0.25)
-		var mi := _rod(a, b, 0.7, M[key])
-		world.add_child(mi)
-	var y := 3.0
-	while y < height:
-		var t := y / height
-		var r := lerpf(s, 0.25, t)
-		geo.box(key, base + Vector3(0, y, 0), Vector3(r * 2.0, 0.45, r * 2.0), Vector2(1, 2), Vector2.ZERO, 50.0)
-		y += 5.0
-	geo.box("red_light", base + Vector3(0, height + 0.6, 0), Vector3(1.4, 1.2, 1.4), Vector2(1, 1))
-	geo.box("red_light", base + Vector3(0, height * 0.55, 0), Vector3(1.0, 1.0, 1.0) + Vector3(s, 0, s), Vector2(1, 1))
-	geo.box(key, base + Vector3(0, height + 5.0, 0), Vector3(0.5, 8.0, 0.5), Vector2(1, 2))
-
-
-func _rod(a: Vector3, b: Vector3, thick: float, m: Material) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(thick, (b - a).length(), thick)
-	mi.mesh = bm
-	mi.material_override = m
-	var up := (b - a).normalized()
-	var basis := Basis()
-	var side := up.cross(Vector3.FORWARD)
-	if side.length() < 0.01:
-		side = up.cross(Vector3.RIGHT)
-	side = side.normalized()
-	basis = Basis(side, up, side.cross(up).normalized())
-	mi.transform = Transform3D(basis, (a + b) * 0.5)
-	return mi
-
-
 func _buildings() -> void:
 	for sx in [-1.0, 1.0]:
-		var z := 40.0
-		while z > -720.0:
-			var w := rng.randf_range(20, 38)
-			var z1 := z
-			var z0 := z - w
-			if _in_cross(z0, z1, 1.0):
-				z = _next_after_cross(z0)
-				continue
-			if z0 < MASP_Z.y and z1 > MASP_Z.x:
-				z = MASP_Z.x - 4.0
-				continue
-			var skipped := false
-			for sk in SKIP:
-				if sk[0] == sx and z0 < sk[2] and z1 > sk[1]:
-					z = sk[1] - 2.0
-					skipped = true
-			if skipped:
-				continue
-			var d := rng.randf_range(22, 34)
-			var tall := rng.randf()
-			var h := rng.randf_range(26, 55) if tall < 0.4 else rng.randf_range(55, 100)
-			var cx: float = sx * (31.0 + d * 0.5 + rng.randf_range(0, 2))
-			_building(cx, (z0 + z1) * 0.5, d, w - rng.randf_range(1, 4), h, rng.randf() < 0.8 and h > 40)
-			z = z0
-		z = 20.0
-		while z > -720.0:
-			var w := rng.randf_range(24, 44)
-			var h := rng.randf_range(70, 160)
-			var cx: float = sx * rng.randf_range(78, 110)
-			if sx < 0 and z - w < -40.0 and z > -150.0:
-				z -= w
-				continue
-			_building(cx, z - w * 0.5, rng.randf_range(24, 36), w, h, rng.randf() < 0.7)
-			z -= w + rng.randf_range(4, 20)
-	_gazeta()
-
-
-func _next_after_cross(z0: float) -> float:
+		var xa: float = sx * 30.0
+		var xb: float = sx * 260.0
+		geo.ground("slab", minf(xa, xb), maxf(xa, xb), -820.0, 120.0, 0.05, Vector2(4, 4), 40.0)
+	var osm := OsmCity.new()
+	osm.zrange = Vector2(-760.0, 70.0)
 	for c in CROSS:
-		if z0 < c + 10.0 and z0 > c - 60.0:
-			return c - 10.0
-	return z0
-
-
-func _gazeta() -> void:
-	_building(-46.0, -205.0, 30.0, 34.0, 52.0, false)
-	_antenna(Vector3(-46.0, 52.0, -205.0), 70.0, true)
+		osm.gaps.append(Vector2(c, 11.0))
+	osm.set_glow(0.18)
+	world.add_child(osm.build("res://assets/osm/paulista.json"))
 
 
 func _masp() -> void:

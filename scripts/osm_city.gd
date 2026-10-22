@@ -21,6 +21,8 @@ var corridors := []
 var seg := 6.0
 var near_x := INF
 var cur_seg := 0.0
+var clip_x := 0.0
+var exclude := []
 var collide := true
 
 
@@ -85,9 +87,10 @@ func build(path: String) -> Node3D:
 func build_data(data: Dictionary) -> Node3D:
 	tools.clear()
 	faces = PackedVector3Array()
-	for b in data.buildings:
-		if _keep(b):
-			_building(b)
+	for b0 in data.buildings:
+		for b in _prepare(b0):
+			if _keep(b):
+				_building(b)
 	var root := Node3D.new()
 	if collide and faces.size() > 0:
 		var body := StaticBody3D.new()
@@ -128,6 +131,43 @@ func _keep(b: Dictionary) -> bool:
 			if absf(p[1] - g.x) < g.y and absf(p[0]) < 160.0:
 				return false
 	return true
+
+
+func _prepare(b: Dictionary) -> Array:
+	var poly := PackedVector2Array()
+	var cen := Vector2.ZERO
+	for p in b.p:
+		poly.append(Vector2(p[0], p[1]))
+		cen += Vector2(p[0], p[1])
+	cen /= maxf(poly.size(), 1.0)
+	for r in exclude:
+		if (r as Rect2).has_point(cen):
+			return []
+	if clip_x <= 0.0:
+		return [b]
+	var sd := signf(cen.x)
+	var mn := INF
+	for p in poly:
+		mn = minf(mn, p.x * sd)
+	if mn >= clip_x:
+		return [b]
+	var x0 := sd * clip_x
+	var x1 := sd * 100000.0
+	var half := PackedVector2Array([Vector2(minf(x0, x1), -100000.0), Vector2(maxf(x0, x1), -100000.0), Vector2(maxf(x0, x1), 100000.0), Vector2(minf(x0, x1), 100000.0)])
+	var out := []
+	for q in Geometry2D.intersect_polygons(poly, half):
+		var a := 0.0
+		for i in q.size():
+			a += q[i].x * q[(i + 1) % q.size()].y - q[(i + 1) % q.size()].x * q[i].y
+		if absf(a) * 0.5 < 10.0:
+			continue
+		var nb := b.duplicate()
+		var pts := []
+		for v in q:
+			pts.append([v.x, v.y])
+		nb.p = pts
+		out.append(nb)
+	return out
 
 
 func _pick(kind: String, seed: int) -> String:
@@ -236,6 +276,8 @@ func _wall(key: String, a0: Vector2, c0: Vector2, a1: Vector2, c1: Vector2, y0: 
 	var uvs := [Vector2(u0, v0), Vector2(u1, v0), Vector2(u1, v1), Vector2(u0, v1)]
 	if photo:
 		uvs = [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	if (C0 - A0).dot(Vector3.UP.cross(nn)) < 0.0:
+		uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
 	var nu := 1
 	var nv := 1
 	if cur_seg > 0.0 and key != "roof":

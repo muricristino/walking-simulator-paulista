@@ -35,6 +35,12 @@ func _ready() -> void:
 			test_mode = true
 	_load()
 	apply()
+	get_tree().set_auto_accept_quit(false)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		quit()
 
 
 func set_state(s: int) -> void:
@@ -65,6 +71,14 @@ func apply() -> void:
 		if fs != fullscreen:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 	settings_changed.emit()
+
+
+func quit() -> void:
+	var scene := get_tree().current_scene
+	var audio: Variant = scene.get("audio") if scene else null
+	if audio and audio.has_method("shutdown"):
+		await audio.shutdown()
+	get_tree().quit()
 
 
 func save_settings() -> void:

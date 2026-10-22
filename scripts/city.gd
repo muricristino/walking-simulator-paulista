@@ -171,4 +171,5 @@ func _maybe_shot() -> void:
 	var img := vp.get_texture().get_image()
 	img.save_png(path)
 	print("shot ", path, " ", img.get_size())
+	await audio.shutdown()
 	get_tree().quit()

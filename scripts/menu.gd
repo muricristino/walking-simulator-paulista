@@ -212,7 +212,7 @@ func _title() -> void:
 	_button(col, "INICIAR", func(): start_pressed.emit())
 	_button(col, "OPÇÕES", func(): _open("options", "title"))
 	_button(col, "CRÉDITOS", func(): _open("credits", "title"))
-	_button(col, "SAIR", func(): get_tree().quit())
+	_button(col, "SAIR", func(): Game.quit())
 	var goal := UI.label("Objetivo: caminhar do MASP até a Alameda Rio Claro", 20, UI.DIM)
 	goal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	goal.position = Vector2(0, 236)
@@ -239,7 +239,7 @@ func _pause() -> void:
 	_button(v, "REINICIAR", func(): restart_pressed.emit())
 	_button(v, "OPÇÕES", func(): _open("options", "pause"))
 	_button(v, "SAIR PARA O MENU", func(): menu_pressed.emit())
-	_button(v, "SAIR DO JOGO", func(): get_tree().quit())
+	_button(v, "SAIR DO JOGO", func(): Game.quit())
 
 
 func _open(p: String, from: String) -> void:

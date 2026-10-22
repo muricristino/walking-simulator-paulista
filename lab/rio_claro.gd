@@ -106,6 +106,13 @@ func _mat(tex: Texture2D, emit := Color.BLACK, unshaded := 0.0) -> ShaderMateria
 
 
 func _place_cam() -> void:
+	var ai := OS.get_cmdline_user_args().find("--at")
+	if ai >= 0:
+		var v: PackedFloat64Array = OS.get_cmdline_user_args()[ai + 1].split_floats(",")
+		cam.projection = Camera3D.PROJECTION_PERSPECTIVE
+		cam.position = Vector3(v[0], v[1], v[2])
+		cam.look_at(Vector3(v[3], v[4], v[5]))
+		return
 	if foto >= 0:
 		var q: Dictionary = points[foto]
 		var p := Vector3(q.p[0], 0.0, q.p[1])

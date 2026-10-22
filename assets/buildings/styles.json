@@ -1,0 +1,147 @@
+{
+ "a001": {
+  "floors": 8,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a002": {
+  "floors": 8,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a003": {
+  "floors": 8,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a004": {
+  "floors": 8,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a005": {
+  "floors": 12,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a006": {
+  "floors": 8,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a012": {
+  "floors": 26,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a013": {
+  "floors": 26,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a014": {
+  "floors": 30,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a015": {
+  "floors": 26,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "a017": {
+  "floors": 10,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a018": {
+  "floors": 6,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a018b": {
+  "floors": 6,
+  "aspect": 1.0,
+  "kind": "low"
+ },
+ "a019": {
+  "floors": 5,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a019b": {
+  "floors": 5,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a020": {
+  "floors": 6,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "a020b": {
+  "floors": 6,
+  "aspect": 1.0,
+  "kind": "tower"
+ },
+ "p_ii68": {
+  "floors": 15,
+  "aspect": 0.9106302916274694,
+  "kind": "mid"
+ },
+ "p_panel1": {
+  "floors": 4,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "p_panel2": {
+  "floors": 4,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "p_panel3": {
+  "floors": 4,
+  "aspect": 1.0,
+  "kind": "low"
+ },
+ "p_brick": {
+  "floors": 4,
+  "aspect": 1.0,
+  "kind": "low"
+ },
+ "p_brickred": {
+  "floors": 4,
+  "aspect": 1.0,
+  "kind": "low"
+ },
+ "p_pastilha": {
+  "floors": 5,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "p_pastilha2": {
+  "floors": 5,
+  "aspect": 1.0,
+  "kind": "mid"
+ },
+ "p_white": {
+  "floors": 4,
+  "aspect": 1.0,
+  "kind": "low"
+ },
+ "t_shops": {
+  "floors": 1,
+  "aspect": 4.0,
+  "kind": "terreo"
+ },
+ "t_lobby": {
+  "floors": 1,
+  "aspect": 4.0,
+  "kind": "terreo"
+ },
+ "t_pilotis": {
+  "floors": 1,
+  "aspect": 4.0,
+  "kind": "terreo"
+ }
+}

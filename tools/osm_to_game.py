@@ -100,6 +100,24 @@ for k, sc in specials.items():
         if best is None or dd < best[0]:
             best = (dd, e["id"])
     owner[best[1]] = k
+cand = []
+for e in els:
+    t = e.get("tags", {})
+    if "building" not in t or e["type"] != "way":
+        continue
+    poly = [xy(p) for p in e["geometry"]]
+    c = centroid(poly)
+    if math.dist(c, specials["conjunto"]) > 110:
+        continue
+    s0, side0, _ = project(c)
+    if abs(side0) > 60:
+        continue
+    ss = [project(p)[0] for p in poly]
+    cand.append((max(ss) - min(ss), e["id"], level_h(t)))
+cand.sort(reverse=True)
+owner = {i: k for i, k in owner.items() if k != "conjunto"}
+for ln, i, hh in cand[:2]:
+    owner[i] = "conjunto"
 for e in els:
     if e.get("tags", {}).get("name") == "Edifício Luís Eulálio de Bueno Vidigal Filho":
         owner = {i: k for i, k in owner.items() if k != "fiesp"}
@@ -129,6 +147,8 @@ for e in els:
         gp.append([round(gx + sign * b, 2), round(gz - a, 2)])
     h = level_h(t)
     style = owner.get(e["id"], "")
+    if style == "conjunto":
+        h = max(h, 24.0)
     hh = int(hashlib.md5(str(e["id"]).encode()).hexdigest(), 16)
     result.append({"p": gp, "h": round(h, 1), "style": style, "seed": hh % 100000, "name": t.get("name", ""), "front": abs(side) < 45})
 json.dump({"masp_side": sign, "buildings": result}, open(out, "w"), ensure_ascii=False)

@@ -33,7 +33,10 @@
 
 ## Buildings (assets/osm, assets/buildings)
 - Footprints and heights: © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright), fetched via Overpass API and converted by tools/osm_to_game.py
-- Common facades from ambientCG (CC0 1.0): Facade002 (glass), Facade003 (glass2), Facade018A (brick), Facade020A (pillar), Facade017 (brise), with their emission maps where available; other night masks generated locally
+- Common facades a0xx_*.png from ambientCG (CC0 1.0, https://ambientcg.com): Facade001-006, 012-015, 017, 018A/B, 019A/B, 020A/B with their emission maps where available; other night masks generated locally
+- p_*.png, e_*.png: built from "Panelka Pack" by kureca (https://kureca.itch.io/panelka-pack), CC0 1.0: II-68 facade, Panel1-6 windows, Bricks1, BrickWall1, WallTiles, WhiteBricks, Concrete1, Panel1Edge
+- t_*.png (ground floors): composed from the props textures above and ambientCG Facade006
+- Built by tools/make_facades.py
 - Landmark photos from Wikimedia Commons, cropped, downscaled and posterized:
   - conjunto_c.png (also the common 'conjunto' style): "Facade of the Conjunto Nacional cropped version.jpg" by Wilfredor, CC0, https://commons.wikimedia.org/wiki/File:Facade_of_the_Conjunto_Nacional_cropped_version.jpg
   - fiesp_c.png: "FIESP building 52.jpg" by Mauro Cateb, CC BY-SA 4.0, https://commons.wikimedia.org/wiki/File:FIESP_building_52.jpg

@@ -4,7 +4,6 @@ signal car_spawned(node: Node3D)
 signal car_recycled(node: Node3D)
 signal honk(node: Node3D)
 
-const Geo := preload("res://scripts/geo.gd")
 const Cars := preload("res://scripts/cars.gd")
 const Lights := preload("res://scripts/traffic_light.gd")
 const Layout := preload("res://scripts/layout.gd")
@@ -14,7 +13,6 @@ const BUS_LANE := 14.25
 const Z_LO := -1080.0
 const Z_HI := 380.0
 const PARK_GAP := 130.0
-const ROAD_END := Vector2(-759.0, 59.0)
 const HIDE_FAR := 440.0
 const HIDE_NEAR := 300.0
 const VIS_RANGE := 460.0
@@ -68,7 +66,6 @@ func build(c: Node) -> void:
 		for lx in CAR_LANES:
 			_fill_lane(d * -lx, d, false)
 		_fill_lane(d * -BUS_LANE, d, true)
-	_road_ends()
 	scan_parked()
 	scan_parked.call_deferred()
 	_hook_player.call_deferred()
@@ -81,21 +78,6 @@ func _bus_stops() -> void:
 		bus_stops[d].append(float(p.z))
 	for d in bus_stops:
 		bus_stops[d].sort_custom(func(a: float, b: float) -> bool: return a * d < b * d)
-
-
-func _road_ends() -> void:
-	if not city.M.has("asphalt"):
-		return
-	var g := Geo.new()
-	g.add_mat("asphalt", city.M.asphalt)
-	for sx in [-1.0, 1.0]:
-		var x0: float = 2.0 if sx > 0 else -16.0
-		g.ground("asphalt", x0, x0 + 14.0, ROAD_END.y, Z_HI + PARK_GAP + 20.0, -0.03, Vector2(4, 4), 20.0)
-		g.ground("asphalt", x0, x0 + 14.0, Z_LO - PARK_GAP - 20.0, ROAD_END.x, -0.03, Vector2(4, 4), 20.0)
-	var n := Node3D.new()
-	n.name = "RoadEnds"
-	city.world.add_child(n)
-	g.build(n)
 
 
 func _s_start(d: int) -> float:

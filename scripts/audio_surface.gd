@@ -6,7 +6,7 @@ const KINDS := {
 	"paint_white": &"asphalt", "paint_yellow": &"asphalt", "bike": &"asphalt", "road": &"asphalt",
 	"mosaic": &"concrete", "concrete": &"concrete", "curb": &"concrete", "slab": &"concrete",
 	"walk": &"concrete", "sidewalk": &"concrete", "paving": &"concrete", "granite": &"concrete",
-	"ground": &"concrete", "stone": &"concrete", "concrete_wall": &"concrete", "plates": &"concrete",
+	"ground": &"concrete", "stone": &"concrete", "concrete_wall": &"concrete", "plates": &"concrete", "tactile": &"concrete", "walk_light": &"concrete",
 	"paver": &"paver", "pavers": &"paver", "intertravado": &"paver",
 	"deck": &"wood", "slats": &"wood", "cut__slats": &"wood", "wood": &"wood",
 	"grass": &"grass", "soil": &"grass", "planter": &"grass", "lawn": &"grass",

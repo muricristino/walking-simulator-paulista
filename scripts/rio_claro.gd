@@ -4,6 +4,7 @@ const Tex := preload("res://scripts/tex.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const OsmCity := preload("res://scripts/osm_city.gd")
 const Props := preload("res://scripts/props.gd")
+const Models := preload("res://scripts/rio_claro_models.gd")
 
 var data: Dictionary
 var grid: Dictionary
@@ -16,6 +17,8 @@ var root: Node3D
 var start := Vector3.ZERO
 var end := Vector3.ZERO
 var lamps := []
+var models := Models.new()
+var use_models := true
 
 
 func _init() -> void:
@@ -97,10 +100,13 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	root = Node3D.new()
 	parent.add_child(root)
 	_mat("asphalt", Tex.plate("res://assets/road/b_128.png"))
-	_mat("walk", Tex.mosaic(4))
+	_mat("walk", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.mosaic(4))
 	_mat("paving", Tex.plate("res://assets/props/concrete.png"))
 	_mat("ground", Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
 	_mat("curb", Tex.flat(Color(0.62, 0.6, 0.58), 8, 0.03, 0.3, 6))
+	var mroot: Node3D = null
+	if use_models and models.available():
+		mroot = models.build()
 	_terrain(skip_near_paulista)
 	_street()
 	for c in data.cross:
@@ -122,9 +128,41 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	fb.add_child(cs)
 	root.add_child(fb)
 	osm.set_glow(0.18)
-	root.add_child(osm.build_data({"buildings": data.buildings}))
+	var keep := []
+	for i in data.buildings.size():
+		if not models.replaced.has(i):
+			keep.append(data.buildings[i])
+	root.add_child(osm.build_data({"buildings": keep}))
+	if mroot:
+		root.add_child(mroot)
+		for p in models.lamps:
+			var ol := OmniLight3D.new()
+			ol.position = p - Vector3(0, 0.6, 0)
+			ol.light_color = Color(1.0, 0.6, 0.28)
+			ol.light_energy = 8.0
+			ol.omni_range = 16.0
+			root.add_child(ol)
+			lamps.append(ol)
 	_furniture()
 	return root
+
+
+func along(x: float, z: float) -> float:
+	var best := INF
+	var s := 0.0
+	var acc := 0.0
+	var st: Array = data.street
+	for k in st.size() - 1:
+		var a := Vector2(st[k].p[0], st[k].p[1])
+		var b := Vector2(st[k + 1].p[0], st[k + 1].p[1])
+		var ab := b - a
+		var t := clampf((Vector2(x, z) - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+		var d := Vector2(x, z).distance_to(a + ab * t)
+		if d < best:
+			best = d
+			s = acc + ab.length() * t
+		acc += ab.length()
+	return s
 
 
 func _terrain(skip: float) -> void:
@@ -185,7 +223,10 @@ func _street() -> void:
 	start = ped[0]
 	end = road[road.size() - 1]
 	ped[0] = ped[0] + (ped[1] - ped[0]).normalized() * 16.0
-	_ribbon("paving", ped, -10.0, 10.0, 0.15)
+	if not models.covers(60.0):
+		_ribbon("paving", ped, -10.0, 10.0, 0.15)
+	if models.covers(300.0):
+		return
 	_ribbon("asphalt", road, -3.0, 3.0, 0.02)
 	_ribbon("walk", road, 3.0, 6.0, 0.17)
 	_ribbon("walk", road, -6.0, -3.0, 0.17)
@@ -235,6 +276,10 @@ func _furniture() -> void:
 		var side := Vector3(-d.z, 0, d.x)
 		var w: float = 8.5 if st[k].w > 10.0 else 4.8
 		while next < dist + l:
+			if models.covers(next):
+				flip = -flip
+				next += 12.0
+				continue
 			var p := a + d * (next - dist) + side * w * flip
 			p.y = street_y(p.x, p.z) + 0.15
 			if int(next / 12.0) % 3 == 0:

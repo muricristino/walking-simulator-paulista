@@ -9,6 +9,7 @@ var mats := {}
 var glow_mats := []
 var lamp_mats := []
 var replaced := {}
+var closed := {}
 var lamps := []
 var ranges := []
 var floor_faces := PackedVector3Array()
@@ -74,6 +75,8 @@ func build() -> Node3D:
 			var meta: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(meta_path))
 			for i in meta.get("replaced", []):
 				replaced[int(i)] = true
+			for i in meta.get("closed", []):
+				closed[int(i)] = true
 			for l in meta.get("lamps", []):
 				lamps.append(Vector3(l[0], l[1], l[2]))
 			if meta.has("range"):

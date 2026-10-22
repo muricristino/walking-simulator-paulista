@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rc_lib import *
 
 k = Kit()
+k.xmax = -30.5
 S0, S1 = 21.0, 133.5
 TL, TR = 8.0, -10.5
 PAVE = 0.17
@@ -65,7 +66,7 @@ for idx in (30, 0, 44):
     pts = [tuple(p) for p in b["p"]]
     k.prism("curtain", pts, ys - 2, ys - 2 + b["h"] - 10, top="panel_dark", tile=(8.0, 16.0))
 b = DATA["buildings"][21]
-pts21 = [tuple(p) for p in b["p"]]
+pts21 = clip_x([tuple(p) for p in b["p"]], k.xmax)
 k.prism("storefront", pts21, 0.15, 0.15 + 4.6, tile=(8.0, 4.6), vfix=(0.0, 1.0))
 k.prism("copper", pts21, 4.75, 6.2, tile=(4.0, 1.4), vfix=(0.0, 1.0), col=None)
 k.prism("panel_dark", pts21, 6.2, 9.5, top="panel_dark", tile=(6.0, 2.5), col=None)
@@ -161,7 +162,7 @@ sbush(k, 36.0, KT - 2.6, ground(36, 0), 4.0, 1.3, seed=6)
 sbush(k, 36.0, -21.0, ground(36, 0), 10.0, 2.4, seed=7, depth=2.4)
 sbush(k, 40.0, -16.2, ground(40, 0), 9.0, 2.2, seed=11, depth=2.2)
 sbush(k, 28.0, -17.0, ground(28, 0), 6.0, 1.9, seed=12, depth=2.0, light=True)
-for i, (s_, t_) in enumerate(((30.0, -19.5), (44.0, -20.0))):
+for i, (s_, t_) in enumerate(((35.5, -19.5), (44.0, -20.0))):
     x, z = frame(s_, t_)
     k.tree((x, ground(s_, 0), z), 1.0, "sibi", seed=70 + i, crown=4.6, lean=lean_to(s_, 0.4))
 sbush(k, 34.0, 7.2, ground(34, 0), 24.0, 1.4, seed=8, depth=1.4)
@@ -169,15 +170,6 @@ sbush(k, 114.0, TR - 1.6, PZ(114) - 0.4, 44.0, 1.9, seed=9, depth=2.2)
 sbush(k, 70.0, DT1 - 6.5, ground(70, 0), 30.0, 1.6, seed=10, depth=2.0)
 x, z = frame(37.0, -20.5)
 k.tube("metal_grey", (x, ground(37, 0), z), (x, ground(37, 0) + 9.0, z), 0.06, 0.05, 5, 3.0)
-
-BS, BT = 16.5, -6.5
-yb = 0.15
-sbox(k, "steel", BS, BT, yb, (6.6, 3.1, 2.9), top="steel", tile=(2.0, 3.1))
-sbox(k, "banca", BS - 1.47, BT, yb + 0.4, (6.4, 2.6, 0.05), col=None, uvfit=True)
-sbox(k, "banca", BS + 1.47, BT, yb + 0.4, (6.4, 2.6, 0.05), col=None, uvfit=True)
-sbox(k, "white", BS, BT, yb + 3.1, (6.9, 0.55, 3.2), col=None)
-sbox(k, "banca_sign", BS - 1.62, BT, yb + 3.13, (6.6, 0.48, 0.04), col=None, uvfit=True)
-sbox(k, "metal_grey", BS + 0.6, BT + 2.0, yb + 3.65, (1.0, 0.6, 0.8), col=None)
 
 for s in (59.0, 60.2, 61.4):
     x, z = frame(s, 5.6)
@@ -195,8 +187,8 @@ for s in (100.0, 101.3):
     a, b = frame(s, TR + 1.85), frame(s, TR + 2.55)
     k.beam("yellow", (a[0], y + 0.7, a[1]), (b[0], y + 0.7, b[1]), 0.04, 4)
 
-trees = [(30, 5.0, "plane", 1.15), (45, 5.0, "plane", 1.25), (66, 5.0, "plane", 1.1), (78, 5.2, "plane", 1.3), (112, 5.0, "plane", 1.2), (127, 4.6, "plane", 1.15),
-         (22, -9.0, "sibi", 1.2), (99, -3.5, "ficus", 1.45), (117, -6.0, "ficus", 1.5), (131, -7.0, "ficus", 1.4)]
+trees = [(35, 5.0, "plane", 1.15), (45, 5.0, "plane", 1.25), (66, 5.0, "plane", 1.1), (78, 5.2, "plane", 1.3), (112, 5.0, "plane", 1.2), (127, 4.6, "plane", 1.15),
+         (99, -3.5, "ficus", 1.45), (117, -6.0, "ficus", 1.5), (131, -7.0, "ficus", 1.4)]
 for i, (s, t, kind, sz) in enumerate(trees):
     x, z = frame(s, t)
     y = ground(s, 0)
@@ -225,5 +217,6 @@ k.box("lamp", (q[0], y + 8.4, q[1]), (0.6, 0.18, 0.4), yaw_of(128), col=None)
 for s, t in ((120.0, -8.6),):
     sbox(k, "granite", s, t, ground(s, 0), (0.6, 0.45, 2.4))
 
+k.clip(k.xmax)
 tris = k.export("rc_calcadao")
-json.dump({"range": [0, 137], "replaced": [0, 4, 19, 21, 22, 26, 28, 30, 32, 36, 37, 44, 47], "lamps": [list(P(104, 1.0, 10.2)), list(P(58, 1.5, 10.2)), list(P(128, 3.5, 8.3))], "tris": tris}, open(os.path.join(OUTDIR, "rc_calcadao.json"), "w"))
+json.dump({"range": [0, 137], "replaced": [0, 4, 19, 21, 22, 26, 28, 30, 32, 36, 37, 44, 47], "closed": [21], "clip_x": k.xmax, "lamps": [list(P(104, 1.0, 10.2)), list(P(58, 1.5, 10.2)), list(P(128, 3.5, 8.3))], "tris": tris}, open(os.path.join(OUTDIR, "rc_calcadao.json"), "w"))

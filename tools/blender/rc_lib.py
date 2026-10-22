@@ -79,11 +79,51 @@ def P(s, t, h=0.0, base=None):
     return (x, y, z)
 
 
+def clip_x(pts, xmax):
+    out = []
+    n = len(pts)
+    for i in range(n):
+        a, b = pts[i], pts[(i + 1) % n]
+        ain, bin_ = a[0] <= xmax, b[0] <= xmax
+        if ain:
+            out.append(a)
+        if ain != bin_:
+            t = (xmax - a[0]) / (b[0] - a[0])
+            out.append(tuple(a[k] + (b[k] - a[k]) * t for k in range(len(a))))
+    return out
+
+
 class Kit:
     def __init__(self):
         self.parts = {}
         self.col = {"floor": [], "wall": []}
         self.rng = random.Random(1)
+        self.xmax = None
+
+    def clip(self, xmax):
+        for mat, (v, f, uv) in list(self.parts.items()):
+            nv, nf, nuv = [], [], []
+            for face in f:
+                pts = [(v[i][0], v[i][1], v[i][2], uv[i][0], uv[i][1]) for i in face]
+                if any(q[0] > xmax for q in pts):
+                    pts = clip_x(pts, xmax)
+                if len(pts) < 3:
+                    continue
+                i0 = len(nv)
+                nv.extend((q[0], q[1], q[2]) for q in pts)
+                nuv.extend((q[3], q[4]) for q in pts)
+                nf.append(list(range(i0, i0 + len(pts))))
+            if nf:
+                self.parts[mat] = (nv, nf, nuv)
+            else:
+                del self.parts[mat]
+        for kind in self.col:
+            out = []
+            for poly in self.col[kind]:
+                q = clip_x(poly, xmax) if any(p[0] > xmax for p in poly) else poly
+                if len(q) >= 3:
+                    out.append(q)
+            self.col[kind] = out
 
     def _m(self, mat):
         return self.parts.setdefault(mat, ([], [], []))
@@ -405,6 +445,8 @@ def sbush(kit, s, t, y, length, h, seed=0, light=False, depth=1.9):
         x, z = frame(ss, t + r.uniform(-0.25, 0.25))
         rr = r.uniform(0.85, 1.2)
         hh = h * r.uniform(0.85, 1.15)
+        if kit.xmax is not None and x + depth * 0.5 * rr > kit.xmax:
+            continue
         kit.leafball("leaves_core_light" if light else "leaves_core", "cut__leaves_light" if light else "cut__leaves_ficus", (x, y + hh * 0.5, z), (depth * 0.5 * rr, hh * 0.55, depth * 0.5 * rr), 5, 0.9 * rr, r)
 
 

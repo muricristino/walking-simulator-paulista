@@ -932,13 +932,16 @@ func snapshot() -> Dictionary:
 
 
 func shutdown() -> void:
+	if closed:
+		return
 	closed = true
 	set_process(false)
 	set_physics_process(false)
 	var all: Array = find_children("*", "AudioStreamPlayer", true, false) + city.world.find_children("*", "AudioStreamPlayer3D", true, false)
 	var pl: Variant = city.get("player")
-	if pl and pl.get("steps") is AudioStreamPlayer:
-		all.append(pl.steps)
+	if pl and is_instance_valid(pl) and pl.get("steps") is AudioStreamPlayer:
+		(pl.steps as AudioStreamPlayer).stop()
+		(pl.steps as AudioStreamPlayer).stream = null
 	for p in all:
 		p.stop()
 		p.queue_free()

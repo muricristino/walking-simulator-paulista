@@ -31,7 +31,90 @@ func corridor() -> Array:
 	for q in data.street:
 		pts.append(Vector2(q.p[0], q.p[1]))
 	pts[0] = pts[0] + Vector2(30.0, 0.0)
+	var z := float(grid.z0) + 9.0
+	var zmax: float = float(grid.z0) + float(grid.step) * (int(grid.nz) - 1) - 9.0
+	var flip := false
+	while z <= zmax + 0.1:
+		var xa := -49.0
+		var xb: float = float(grid.x0)
+		pts.append(Vector2(xb if flip else xa, z))
+		pts.append(Vector2(xa if flip else xb, z))
+		flip = not flip
+		z += 20.0
 	return [pts, 11.0]
+
+
+func _hits(b: Dictionary, c: Array) -> bool:
+	var pts: Array = c[0]
+	var hw: float = c[1]
+	for p in b.p:
+		var q := Vector2(p[0], p[1])
+		for k in pts.size() - 1:
+			var a: Vector2 = pts[k]
+			var ab: Vector2 = pts[k + 1] - a
+			var t := clampf((q - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+			if q.distance_to(a + ab * t) < hw:
+				return true
+	return false
+
+
+func _centroid(b: Dictionary) -> Vector2:
+	var c := Vector2.ZERO
+	for p in b.p:
+		c += Vector2(p[0], p[1])
+	return c / b.p.size()
+
+
+func _inside(q: Vector2, poly: Array) -> bool:
+	var pg := PackedVector2Array()
+	for p in poly:
+		pg.append(Vector2(p[0], p[1]))
+	return Geometry2D.is_point_in_polygon(q, pg)
+
+
+func _buildings() -> Array:
+	var paulista: Array = JSON.parse_string(FileAccess.get_file_as_string("res://assets/osm/paulista.json")).buildings
+	var own: Array = data.buildings
+	var cen := []
+	for b in own:
+		cen.append(_centroid(b))
+	var pc := []
+	for b in paulista:
+		pc.append(_centroid(b))
+	var keep := []
+	for i in own.size():
+		if models.replaced.has(i):
+			continue
+		var dup := false
+		if cen[i].x > -30.0:
+			for q in pc:
+				if q.distance_to(cen[i]) < 3.0:
+					dup = true
+					break
+		if not dup:
+			keep.append(own[i])
+	var c := corridor()
+	for j in paulista.size():
+		var b: Dictionary = paulista[j]
+		if not _hits(b, c):
+			continue
+		var q: Vector2 = pc[j]
+		if _near_street(Vector3(q.x, 0.0, q.y)) < 30.0:
+			continue
+		var covered := false
+		for i in own.size():
+			if cen[i].distance_to(q) < 3.0 or _inside(q, own[i].p):
+				covered = true
+				break
+		if covered:
+			continue
+		var y := INF
+		for p in b.p:
+			y = minf(y, street_y(p[0], p[1]))
+		var nb := b.duplicate()
+		nb["y"] = y
+		keep.append(nb)
+	return keep
 
 
 func height(x: float, z: float) -> float:
@@ -102,11 +185,12 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	_mat("asphalt", Tex.plate("res://assets/road/b_128.png"))
 	_mat("walk", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.mosaic(4))
 	_mat("paving", Tex.plate("res://assets/props/concrete.png"))
-	_mat("ground", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
+	_mat("ground", Tex.plate("res://assets/rioclaro/tex/lot.png") if models.available() else Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
 	_mat("curb", Tex.flat(Color(0.62, 0.6, 0.58), 8, 0.03, 0.3, 6))
 	var mroot: Node3D = null
 	if use_models and models.available():
 		mroot = models.build()
+		models.set_glow(0.18, false)
 	_terrain(skip_near_paulista)
 	_street()
 	if not models.available():
@@ -129,11 +213,7 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	fb.add_child(cs)
 	root.add_child(fb)
 	osm.set_glow(0.18)
-	var keep := []
-	for i in data.buildings.size():
-		if not models.replaced.has(i):
-			keep.append(data.buildings[i])
-	root.add_child(osm.build_data({"buildings": keep}))
+	root.add_child(osm.build_data({"buildings": _buildings()}))
 	if mroot:
 		root.add_child(mroot)
 		for p in models.lamps:
@@ -169,9 +249,9 @@ func along(x: float, z: float) -> float:
 func _terrain(skip: float) -> void:
 	var nx: int = grid.nx
 	var nz: int = grid.nz
-	var step: float = grid.step
-	for j in nz - 1:
-		for i in nx - 1:
+	var step: float = grid.step * 0.5
+	for j in (nz - 1) * 2:
+		for i in (nx - 1) * 2:
 			var x0: float = grid.x0 + i * step
 			var z0: float = grid.z0 + j * step
 			if x0 > -skip:

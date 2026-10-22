@@ -220,14 +220,21 @@ def stainless():
 def banca():
     a = fill(128, 64, (0.62, 0.62, 0.61), 0.02)
     rect(a, 0, 0, 128, 12, (0.86, 0.86, 0.84))
-    covers = [(0.85, 0.82, 0.78), (0.86, 0.66, 0.26), (0.12, 0.12, 0.14), (0.75, 0.15, 0.12), (0.2, 0.35, 0.6)]
-    for i, x in enumerate(range(10, 120, 28)):
-        c = covers[i % len(covers)]
-        rect(a, x, 22, x + 22, 50, (0.15, 0.15, 0.15))
-        rect(a, x + 2, 24, x + 20, 48, c)
-        rect(a, x + 4, 27, x + 18, 30, (0.95, 0.95, 0.95) if c[0] < 0.5 else (0.7, 0.1, 0.1))
-        rect(a, x + 4, 40, x + 14, 41, (0.3, 0.3, 0.3))
     save("banca", a)
+    path = os.path.join(OUT, "banca.png")
+    covers = [("#d8d2c4", "#b01818", "VIDA"), ("#f0c040", "#202020", "MODA"), ("#1c1c22", "#f0f0f0", "GOL"), ("#c02a20", "#ffffff", "FATO"),
+              ("#2a5a9a", "#ffffff", "CASA"), ("#e8e8e8", "#c02020", "TV"), ("#3a7a3a", "#ffffff", "SOL"), ("#e07a20", "#ffffff", "POP")]
+    f = "/System/Library/Fonts/Supplemental/Arial Narrow Bold.ttf"
+    args = ["magick", path, "-font", f, "-pointsize", "6"]
+    for i, (bg, fg, txt) in enumerate(covers):
+        x = 4 + i * 15
+        y = 18 if i % 2 == 0 else 20
+        args += ["-fill", "#151515", "-draw", "rectangle %d,%d %d,%d" % (x - 1, y - 1, x + 13, y + 19)]
+        args += ["-fill", bg, "-draw", "rectangle %d,%d %d,%d" % (x, y, x + 12, y + 18)]
+        args += ["-fill", "#e0b090" if i % 3 else "#8a5a40", "-draw", "ellipse %d,%d 3,4 0,360" % (x + 6, y + 12)]
+        args += ["-fill", fg, "-annotate", "+%d+%d" % (x + 1, y + 7), txt]
+    args += ["-fill", "#2a2a2a", "-draw", "rectangle 4,44 124,47", "-fill", "#8a8a88", "-draw", "rectangle 0,48 128,64", "-depth", "8", "PNG24:" + path]
+    subprocess.run(args, check=True)
 
 
 def green_wall():
@@ -415,7 +422,7 @@ def tent():
 
 def core():
     r = np.random.default_rng(31)
-    a = fill(64, 64, (0.12, 0.22, 0.09), 0.03, 0.05, 4)
+    a = fill(64, 64, (0.15, 0.26, 0.11), 0.03, 0.05, 4)
     for k in range(260):
         x, y = r.integers(0, 62), r.integers(0, 62)
         c = np.array([0.16, 0.30, 0.12]) * r.uniform(0.6, 1.3)
@@ -472,6 +479,52 @@ def signs():
     p = (np.abs(xx + 3) < 2) & (np.abs(yy) < 9) | ((np.abs(yy + 4) < 5) & (np.abs(xx - 1) < 5) & ~((np.abs(yy + 4) < 2) & (np.abs(xx - 1) < 2)) & (xx > -5))
     a[p & (d < 14)] = 0.97
     save("sign_parking", a)
+
+
+def lot():
+    r = np.random.default_rng(31)
+    n = 64
+    a = np.ones((n, n, 3)) * col((0.52, 0.51, 0.48))
+    a += r.normal(0, 0.03, (n, n, 1))
+    for x in range(0, n, 16):
+        a[:, x] *= 0.82
+    for y in range(0, n, 16):
+        a[y, :] *= 0.82
+    sm = r.normal(0, 1, (n // 8 + 1, n // 8 + 1))
+    big = np.kron(sm, np.ones((8, 8)))[:n, :n]
+    big = (big + np.roll(big, 4, 0) + np.roll(big, 4, 1) + np.roll(np.roll(big, 4, 0), 4, 1)) / 4
+    a += big[..., None] * 0.035
+    g = big > 0.9
+    a[g] = col((0.33, 0.40, 0.24)) + r.normal(0, 0.03, (int(g.sum()), 1))
+    save("lot", a)
+
+
+def facade_green():
+    r = np.random.default_rng(41)
+    w, h = 128, 128
+    a = np.ones((h, w, 3)) * col((0.22, 0.23, 0.24))
+    a += r.normal(0, 0.02, (h, w, 1))
+    for y in range(0, h, 16):
+        a[y:y + 3, :] = col((0.55, 0.55, 0.53))
+        a[y + 3:y + 13, :] = col((0.10, 0.12, 0.13))
+        for x in range(0, w, 8):
+            a[y + 3:y + 13, x] = col((0.30, 0.31, 0.32))
+    for k in range(900):
+        x, y = r.integers(0, w - 3), r.integers(0, h - 6)
+        if (y % 16) > 6 and r.random() < 0.6:
+            continue
+        L = r.integers(2, 7)
+        c = np.array([0.20, 0.36, 0.13]) * r.uniform(0.6, 1.4)
+        a[y:y + L, x:x + r.integers(1, 4)] = c
+    save("facade_green", a)
+
+
+def barrier():
+    a = np.ones((16, 32, 3)) * col((0.95, 0.95, 0.92))
+    yy, xx = np.mgrid[0:16, 0:32]
+    a[((xx + yy) // 6) % 2 == 0] = col((0.92, 0.42, 0.10))
+    a[:1] = a[-1:] = col((0.3, 0.3, 0.3))
+    save("barrier", a)
 
 
 def copy(src, name, resize=None, mod=None):
@@ -540,6 +593,11 @@ tent()
 core()
 climber()
 signs()
+lot()
+facade_green()
+flat("glass_light", (0.62, 0.68, 0.70), 0.02)
+flat("awning_pink", (0.88, 0.70, 0.72), 0.02)
+barrier()
 copy(os.path.join(ROOT, "assets/road/b_128.png"), "asphalt")
 copy(os.path.join(ROOT, "assets/props/bark.png"), "bark")
 if DL:

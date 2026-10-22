@@ -140,7 +140,7 @@ class Kit:
             for i in range(4):
                 a, b = pts[i], pts[(i + 1) % 4]
                 L = math.hypot(b[0] - a[0], b[1] - a[1])
-                self.poly(mat, [(a[0], y0, a[1]), (b[0], y0, b[1]), (b[0], y1, b[1]), (a[0], y1, a[1])], [(0, 0), (1, 0), (1, 1), (0, 1)], col)
+                self.poly(mat, [(a[0], y0, a[1]), (b[0], y0, b[1]), (b[0], y1, b[1]), (a[0], y1, a[1])], [(1, 0), (0, 0), (0, 1), (1, 1)], col)
         else:
             t = tile or (max(size[0], size[2]), size[1])
             self.prism(mat, pts, y0, y1, None, tile=t, col=col)
@@ -220,7 +220,7 @@ class Kit:
                     self.quad(mat, grid[j][i], grid[j][i2], grid[j + 1][i2], grid[j + 1][i], u0, v0, u1, v1)
 
     def leafball(self, core, leaf, c, rad, n, card, r):
-        self.blob(core, c, (rad[0] * 0.78, rad[1] * 0.7, rad[2] * 0.78), 7, 4, r)
+        self.blob(core, c, (rad[0] * 0.6, rad[1] * 0.55, rad[2] * 0.6), 7, 4, r)
         for k in range(n):
             th = r.uniform(0, 2 * math.pi)
             ph = math.acos(r.uniform(-0.55, 1.0))
@@ -238,8 +238,8 @@ class Kit:
         bark = {"ficus": "bark_ficus", "plane": "bark_plane", "sibi": "bark"}[kind]
         leaf = {"ficus": "cut__leaves_ficus", "plane": "cut__leaves_light", "sibi": "cut__leaves_dark"}[kind]
         core = "leaves_core_light" if kind == "plane" else "leaves_core"
-        th = {"ficus": 3.4, "plane": 5.5, "sibi": 4.5}[kind] * size * r.uniform(0.85, 1.15)
-        tr = {"ficus": 0.5, "plane": 0.22, "sibi": 0.3}[kind] * size
+        th = {"ficus": 4.4, "plane": 5.5, "sibi": 5.4}[kind] * size * r.uniform(0.85, 1.15)
+        tr = {"ficus": 0.36, "plane": 0.22, "sibi": 0.26}[kind] * size
         pts = [(x, y - 0.1, z)]
         cx, cz = x, z
         for k in range(3):
@@ -364,11 +364,14 @@ def sbox(kit, mat, s, t, y, size, top=None, col="wall", uvfit=False, tile=None, 
 
 
 def car(kit, s, t, color="car_white", seed=0, flip=False):
-    r = random.Random(seed)
-    L, W = r.uniform(4.0, 4.6), 1.75
     x, z = frame(s, t)
+    car_at(kit, x, z, yaw_of(s) + (math.pi if flip else 0.0), color, seed)
+
+
+def car_at(kit, x, z, yaw, color="car_white", seed=0, L=None):
+    r = random.Random(seed)
+    L, W = L or r.uniform(4.0, 4.6), 1.75
     y = street_y(x, z) + 0.02
-    yaw = yaw_of(s) + (math.pi if flip else 0.0)
     kit.box(color, (x, y + 0.3, z), (W, 0.75, L), yaw, top=color, col="wall", uvfit=True)
     c, sn = math.cos(yaw), math.sin(yaw)
     off = r.uniform(-0.3, 0.1)
@@ -378,6 +381,12 @@ def car(kit, s, t, color="car_white", seed=0, flip=False):
             px = x + sn * dl + c * dw
             pz = z + c * dl - sn * dw
             kit.tube("tire", (px - c * 0.12, y + 0.32, pz + sn * 0.12), (px + c * 0.12, y + 0.32, pz - sn * 0.12), 0.32, 0.32, 6)
+
+
+def moto_at(kit, x, z, yaw):
+    y = street_y(x, z) + 0.02
+    kit.box("metal_dark", (x, y + 0.3, z), (0.4, 0.5, 1.8), yaw, col=None)
+    kit.box("car_black", (x, y + 0.7, z), (0.35, 0.35, 1.2), yaw, col=None)
 
 
 def tower(kit, pts, y0, h, tex, tile=(8.0, 12.0), lobby="glass_dark", lobby_h=4.0):

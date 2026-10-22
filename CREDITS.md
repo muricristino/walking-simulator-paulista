@@ -20,3 +20,13 @@
 - paint_white.png, paint_yellow.png: RoadLines020A (https://ambientcg.com/view?id=RoadLines020A)
 - bike_red.png: tinted from Asphalt015
 - Downscaled to 64/128/256 px, brightness matched, palette posterized
+
+## Street props (assets/props)
+- loafbrr/: "Lamp Post Bench TrashCan" by Loafbrr (https://loafbrr.itch.io/lamp-post-bench-trashcan), CC0 1.0. Bench, TrashCan, LampPost_1; textures downscaled, trash can recolored orange, pole desaturated
+- bark.png: ambientCG Bark004 (https://ambientcg.com/view?id=Bark004), CC0 1.0
+- canopy.png: leaves cut from ambientCG LeafSet026 (https://ambientcg.com/view?id=LeafSet026), CC0 1.0
+- shutter.png: ambientCG CorrugatedSteel005 (https://ambientcg.com/view?id=CorrugatedSteel005), CC0 1.0
+- concrete.png and shop sign backgrounds: ambientCG Concrete034 (https://ambientcg.com/view?id=Concrete034), CC0 1.0
+- window.png: crop of ambientCG Facade009 (https://ambientcg.com/view?id=Facade009), CC0 1.0
+- facade_upper.png: crop of ambientCG Facade013 (https://ambientcg.com/view?id=Facade013), CC0 1.0
+- sign0-3.png: generic shop names drawn locally over the concrete photo

@@ -140,7 +140,7 @@ class Kit:
             for i in range(4):
                 a, b = pts[i], pts[(i + 1) % 4]
                 L = math.hypot(b[0] - a[0], b[1] - a[1])
-                self.poly(mat, [(a[0], y0, a[1]), (b[0], y0, b[1]), (b[0], y1, b[1]), (a[0], y1, a[1])], [(0, 0), (1, 0), (1, 1), (0, 1)], col)
+                self.poly(mat, [(a[0], y0, a[1]), (b[0], y0, b[1]), (b[0], y1, b[1]), (a[0], y1, a[1])], [(1, 0), (0, 0), (0, 1), (1, 1)], col)
         else:
             t = tile or (max(size[0], size[2]), size[1])
             self.prism(mat, pts, y0, y1, None, tile=t, col=col)

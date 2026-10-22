@@ -220,14 +220,21 @@ def stainless():
 def banca():
     a = fill(128, 64, (0.62, 0.62, 0.61), 0.02)
     rect(a, 0, 0, 128, 12, (0.86, 0.86, 0.84))
-    covers = [(0.85, 0.82, 0.78), (0.86, 0.66, 0.26), (0.12, 0.12, 0.14), (0.75, 0.15, 0.12), (0.2, 0.35, 0.6)]
-    for i, x in enumerate(range(10, 120, 28)):
-        c = covers[i % len(covers)]
-        rect(a, x, 22, x + 22, 50, (0.15, 0.15, 0.15))
-        rect(a, x + 2, 24, x + 20, 48, c)
-        rect(a, x + 4, 27, x + 18, 30, (0.95, 0.95, 0.95) if c[0] < 0.5 else (0.7, 0.1, 0.1))
-        rect(a, x + 4, 40, x + 14, 41, (0.3, 0.3, 0.3))
     save("banca", a)
+    path = os.path.join(OUT, "banca.png")
+    covers = [("#d8d2c4", "#b01818", "VIDA"), ("#f0c040", "#202020", "MODA"), ("#1c1c22", "#f0f0f0", "GOL"), ("#c02a20", "#ffffff", "FATO"),
+              ("#2a5a9a", "#ffffff", "CASA"), ("#e8e8e8", "#c02020", "TV"), ("#3a7a3a", "#ffffff", "SOL"), ("#e07a20", "#ffffff", "POP")]
+    f = "/System/Library/Fonts/Supplemental/Arial Narrow Bold.ttf"
+    args = ["magick", path, "-font", f, "-pointsize", "6"]
+    for i, (bg, fg, txt) in enumerate(covers):
+        x = 4 + i * 15
+        y = 18 if i % 2 == 0 else 20
+        args += ["-fill", "#151515", "-draw", "rectangle %d,%d %d,%d" % (x - 1, y - 1, x + 13, y + 19)]
+        args += ["-fill", bg, "-draw", "rectangle %d,%d %d,%d" % (x, y, x + 12, y + 18)]
+        args += ["-fill", "#e0b090" if i % 3 else "#8a5a40", "-draw", "ellipse %d,%d 3,4 0,360" % (x + 6, y + 12)]
+        args += ["-fill", fg, "-annotate", "+%d+%d" % (x + 1, y + 7), txt]
+    args += ["-fill", "#2a2a2a", "-draw", "rectangle 4,44 124,47", "-fill", "#8a8a88", "-draw", "rectangle 0,48 128,64", "-depth", "8", "PNG24:" + path]
+    subprocess.run(args, check=True)
 
 
 def green_wall():

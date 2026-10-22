@@ -13,6 +13,16 @@ var last := Vector3.ZERO
 
 
 func _ready() -> void:
+	if OS.get_cmdline_user_args().has("--rio"):
+		plan = [
+			{"t": 1.0, "shot": "r1_start"},
+			{"t": 5.0, "move": Vector2(0, 1), "run": true, "shot": "r2_entrada"},
+			{"t": 12.0, "move": Vector2(0, 1), "run": true, "shot": "r3_meio"},
+			{"t": 14.0, "move": Vector2(0, 1), "run": true, "shot": "r4_fim"},
+			{"t": 8.0, "move": Vector2(0, 1), "run": true, "shot": "r5_parede"},
+		]
+		_begin()
+		return
 	plan = [
 		{"t": 1.2, "shot": "01_idle"},
 		{"t": 1.4, "move": Vector2(0, 1), "shot": "02_walk"},
@@ -58,7 +68,7 @@ func _physics_process(dt: float) -> void:
 	if left > 0.0:
 		return
 	var s: Dictionary = plan[i]
-	print("step %d pos %s yaw %.2f fps %d" % [i, player.global_position, player.rotation.y, Engine.get_frames_per_second()])
+	print("step %d pos %s yaw %.2f fps %d goal %s" % [i, player.global_position, player.rotation.y, Engine.get_frames_per_second(), str(get_parent().get("goal_done"))])
 	if s.has("shot"):
 		shooting = true
 		player.sim = {}

@@ -113,6 +113,7 @@ func _place_cam() -> void:
 		var d := Vector3(q.dir[0], 0.0, q.dir[1])
 		p += d * float(q.get("ds", 0.0)) + Vector3(d.z, 0.0, -d.x) * float(q.get("dt", 0.0))
 		p.y = rio.street_y(p.x, p.z) + (0.17 if foto > 0 and foto < 5 else 0.0) + 2.4
+		d = d.rotated(Vector3.UP, deg_to_rad(float(q.get("dyaw", 0.0))))
 		if vista == "esq":
 			d = d.rotated(Vector3.UP, PI * 0.5)
 		elif vista == "dir":

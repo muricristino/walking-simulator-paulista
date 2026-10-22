@@ -393,6 +393,14 @@ for s in (226.0, 296.0, 336.0):
 for s in (186.0, 252.0, 352.0):
     post(s, -SW + 0.6, [], ["sign_noparking"])
 
+for i, s in enumerate((148.0, 150.2, 152.4, 154.6, 157.5, 159.7)):
+    t = 7.2 + (0.25 if i % 2 else 0.0)
+    y = walk(s, 0)
+    for dl in (-0.8, 0.8):
+        sbox(k, "metal_dark", s + dl, t, y, (0.5, 0.9, 0.08), col=None)
+    sbox(k, "barrier", s, t, y + 0.75, (0.06, 0.28, 2.0), col=None, uvfit=True)
+    sbox(k, "barrier", s, t, y + 0.35, (0.06, 0.2, 2.0), col=None, uvfit=True)
+sbox(k, "barrier", 162.5, 6.6, walk(162.5, 0), (0.7, 0.9, 0.7), col=None, top="barrier")
 tris = k.export("rc_rua")
 PK = Kit()
 spots = []

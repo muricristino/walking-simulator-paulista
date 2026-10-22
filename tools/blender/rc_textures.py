@@ -519,6 +519,14 @@ def facade_green():
     save("facade_green", a)
 
 
+def barrier():
+    a = np.ones((16, 32, 3)) * col((0.95, 0.95, 0.92))
+    yy, xx = np.mgrid[0:16, 0:32]
+    a[((xx + yy) // 6) % 2 == 0] = col((0.92, 0.42, 0.10))
+    a[:1] = a[-1:] = col((0.3, 0.3, 0.3))
+    save("barrier", a)
+
+
 def copy(src, name, resize=None, mod=None):
     args = ["magick", src]
     if resize:
@@ -589,6 +597,7 @@ lot()
 facade_green()
 flat("glass_light", (0.62, 0.68, 0.70), 0.02)
 flat("awning_pink", (0.88, 0.70, 0.72), 0.02)
+barrier()
 copy(os.path.join(ROOT, "assets/road/b_128.png"), "asphalt")
 copy(os.path.join(ROOT, "assets/props/bark.png"), "bark")
 if DL:

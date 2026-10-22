@@ -57,3 +57,8 @@
   - bark.png: copy of assets/props/bark.png (ambientCG Bark004, CC0 1.0)
   - placa_*.png and banca_sign.png: text drawn locally with ImageMagick and system fonts (Arial Narrow Bold, Times New Roman Bold)
   - bark_ficus.png: ambientCG Bark012 (https://ambientcg.com/view?id=Bark012), CC0 1.0, downscaled and darkened
+
+## UI fonts (assets/ui)
+- Press Start 2P by CodeMan38 (https://fonts.google.com/specimen/Press+Start+2P), SIL Open Font License 1.1 (assets/ui/OFL-PressStart2P.txt). Used: title
+- Silkscreen by Jason Kottke (https://fonts.google.com/specimen/Silkscreen), SIL Open Font License 1.1 (assets/ui/OFL-Silkscreen.txt). Used: buttons, compass, labels
+- VT323 by Peter Hull (https://fonts.google.com/specimen/VT323), SIL Open Font License 1.1 (assets/ui/OFL-VT323.txt). Used: body text

@@ -147,18 +147,23 @@ x, z = frame(KS - 0.6, KT)
 k.box("white", (x, yk + 2.8, z), (4.2, 0.12, 5.2), yaw_of(KS), col=None)
 k.box("steel", (x, yk + 2.92, z), (3.4, 0.6, 4.4), yaw_of(KS), col=None)
 sbox(k, "concrete_wall", 33.0, -18.0, ground(33, 0), (3.0, 0.8, 16.0), top="soil")
-for i, s0 in enumerate(range(26, 41, 2)):
-    sbox(k, "hedge", s0, -18.0 + (i % 2) * 0.6, ground(s0, 0) + 0.8, (2.4, 1.0 + (i % 3) * 0.3, 2.4), col=None)
+sbush(k, 33.0, -18.0, ground(33, 0) + 0.8, 15.0, 1.6, seed=5, depth=2.6)
+sbush(k, 36.0, KT - 2.6, ground(36, 0), 4.0, 1.3, seed=6)
+sbush(k, 36.0, -21.0, ground(36, 0), 10.0, 2.4, seed=7, depth=2.4)
+sbush(k, 34.0, 7.2, ground(34, 0), 24.0, 1.4, seed=8, depth=1.4)
+sbush(k, 114.0, TR - 1.6, PZ(114) - 0.4, 44.0, 1.9, seed=9, depth=2.2)
+sbush(k, 70.0, DT1 - 6.5, ground(70, 0), 30.0, 1.6, seed=10, depth=2.0)
 x, z = frame(37.0, -20.5)
 k.tube("metal_grey", (x, ground(37, 0), z), (x, ground(37, 0) + 9.0, z), 0.06, 0.05, 5, 3.0)
 
-x, z = frame(15.5, -6.2)
+BS, BT = 16.5, -6.5
 yb = 0.15
-k.box("steel", (x, yb, z), (2.9, 3.1, 6.6), yaw_of(15.5), top="steel", tile=(2.0, 3.1))
-sbox(k, "banca", 15.5, -6.2 + 1.47, yb + 0.4, (0.05, 2.7, 6.4), col=None, uvfit=True, yaw_add=0.0)
-sbox(k, "banca", 15.5, -6.2 - 1.47, yb + 0.4, (0.05, 2.7, 6.4), col=None, uvfit=True)
-sbox(k, "white", 15.5, -6.2, yb + 3.1, (3.2, 0.5, 6.9), col=None)
-sbox(k, "metal_grey", 17.5, -6.2, yb + 3.6, (0.8, 0.6, 1.0), col=None)
+sbox(k, "steel", BS, BT, yb, (6.6, 3.1, 2.9), top="steel", tile=(2.0, 3.1))
+sbox(k, "banca", BS - 1.47, BT, yb + 0.4, (6.4, 2.6, 0.05), col=None, uvfit=True)
+sbox(k, "banca", BS + 1.47, BT, yb + 0.4, (6.4, 2.6, 0.05), col=None, uvfit=True)
+sbox(k, "white", BS, BT, yb + 3.1, (6.9, 0.55, 3.2), col=None)
+sbox(k, "banca_sign", BS - 1.62, BT, yb + 3.13, (6.6, 0.48, 0.04), col=None, uvfit=True)
+sbox(k, "metal_grey", BS + 0.6, BT + 2.0, yb + 3.65, (1.0, 0.6, 0.8), col=None)
 
 for s in (59.0, 60.2, 61.4):
     x, z = frame(s, 5.6)
@@ -176,17 +181,17 @@ for s in (100.0, 101.3):
     a, b = frame(s, TR + 1.85), frame(s, TR + 2.55)
     k.beam("yellow", (a[0], y + 0.7, a[1]), (b[0], y + 0.7, b[1]), 0.04, 4)
 
-trees = [(30, 5.0, "plane", 1.0), (45, 5.0, "plane", 1.05), (66, 5.0, "plane", 0.95), (78, 5.2, "plane", 1.1), (112, 5.0, "plane", 1.0), (127, 4.6, "plane", 1.0),
-         (22, -9.0, "sibi", 1.0), (99, -3.5, "ficus", 1.35), (117, -6.0, "ficus", 1.45), (131, -7.0, "ficus", 1.3)]
+trees = [(30, 5.0, "plane", 1.15), (45, 5.0, "plane", 1.25), (66, 5.0, "plane", 1.1), (78, 5.2, "plane", 1.3), (112, 5.0, "plane", 1.2), (127, 4.6, "plane", 1.15),
+         (22, -9.0, "sibi", 1.2), (99, -3.5, "ficus", 1.45), (117, -6.0, "ficus", 1.5), (131, -7.0, "ficus", 1.4)]
 for i, (s, t, kind, sz) in enumerate(trees):
     x, z = frame(s, t)
     y = ground(s, 0)
     if kind == "plane":
         sbox(k, "curb", s, t, y - 0.1, (1.4, 0.15, 1.8), top="soil", col=None)
-    k.tree((x, y, z), sz, kind, seed=i * 7 + 3, crown=(3.4 if kind == "plane" else 6.0) * sz)
+    k.tree((x, y, z), sz, kind, seed=i * 7 + 3, crown=(3.6 if kind == "plane" else 6.0) * sz, lean=lean_to(s, -0.5 if t > 0 else 0.6))
 for i, (s, t) in enumerate([(100, -18), (112, -22), (126, -16), (106, -32), (122, -30)]):
     x, z = frame(s, t)
-    k.tree((x, PZ(min(s, 136)) , z), 1.6, "ficus" if i % 2 else "sibi", seed=50 + i, crown=6.0)
+    k.tree((x, PZ(min(s, 136)), z), 1.7, "ficus" if i % 2 else "sibi", seed=50 + i, crown=7.5, lean=lean_to(s, 0.8))
 
 for s, t in ((104.0, 1.0), (58.0, 1.5)):
     x, z = frame(s, t)

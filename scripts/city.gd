@@ -5,6 +5,7 @@ const Geo := preload("res://scripts/geo.gd")
 const Player := preload("res://scripts/player.gd")
 const Autowalk := preload("res://scripts/autowalk.gd")
 const People := preload("res://scripts/people.gd")
+const Katcho := preload("res://scripts/katcho.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(640, 480)
 const CROSS := [-150.0, -380.0, -560.0]
@@ -22,7 +23,11 @@ var player: CharacterBody3D
 var movers := []
 var walkers := []
 var people := People.new()
-var ped_pool := []
+var katcho := Katcho.new()
+var ped_vars := []
+var statics := []
+var placed := []
+var lod_t := 0.0
 
 
 func _ready() -> void:
@@ -572,16 +577,21 @@ func _moving_car(x: float, z: float, v: float) -> void:
 	movers.append({"node": body, "v": v, "z0": -420.0, "z1": 50.0})
 
 
-func _ped_seed() -> int:
-	if ped_pool.is_empty():
-		for i in 20:
-			ped_pool.append(1000 + i * 37)
-	return ped_pool[rng.randi() % ped_pool.size()]
+func _civilian(height: float) -> Dictionary:
+	if ped_vars.is_empty():
+		ped_vars = katcho.variants()
+	var v: Array = ped_vars[rng.randi() % ped_vars.size()]
+	var c := katcho.make(v[0], v[1], height)
+	var sh := MeshInstance3D.new()
+	sh.mesh = people._shadow()
+	sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	c.root.add_child(sh)
+	return c
 
 
 func _walker(x: float, z: float, dir: float) -> void:
-	var r := people.rig(_ped_seed())
-	var hs: float = r.body.scale.y
+	var hs := rng.randf_range(0.95, 1.05)
+	var c := _civilian(1.72 * hs)
 	var body := AnimatableBody3D.new()
 	body.collision_layer = 1
 	body.collision_mask = 0
@@ -592,24 +602,15 @@ func _walker(x: float, z: float, dir: float) -> void:
 	cs.shape = b
 	cs.position = Vector3(0, 0.875 * hs, 0)
 	body.add_child(cs)
-	body.add_child(r.root)
+	var r: Node3D = c.root
+	r.rotation.y = PI
+	body.add_child(r)
 	body.position = Vector3(x, 0.15, z)
 	body.rotation.y = 0.0 if dir < 0.0 else PI
 	world.add_child(body)
-	walkers.append({"node": body, "rig": r, "dir": dir, "speed": rng.randf_range(1.1, 1.5), "phase": rng.randf() * TAU, "v": 0.0})
-
-
-func _bake(node: Node3D, xf: Transform3D) -> void:
-	for c in node.get_children():
-		var cx: Transform3D = xf * (c as Node3D).transform
-		if c is MeshInstance3D:
-			var m: Mesh = c.mesh
-			var mt: Material = m.surface_get_material(0)
-			var key := "ped%d" % mt.get_instance_id()
-			if not geo.mats.has(key):
-				geo.add_mat(key, mt)
-			geo.append(key, m, cx)
-		_bake(c, cx)
+	var speed: float = c.spec.stride * rng.randf_range(0.95, 1.1)
+	katcho.play(c, true, rng.randf() * 2.0)
+	walkers.append({"node": body, "c": c, "dir": dir, "speed": speed, "v": speed, "walking": true})
 
 
 func _physics_process(dt: float) -> void:
@@ -621,6 +622,14 @@ func _physics_process(dt: float) -> void:
 		n.position.z = z
 	for w in walkers:
 		_walk(w, dt)
+	lod_t -= dt
+	if lod_t <= 0.0 and player:
+		lod_t = 0.4
+		var pp := player.global_position
+		for st in statics:
+			var ap: AnimationPlayer = st.ap
+			if ap:
+				ap.active = (st.pos as Vector3).distance_squared_to(pp) < 900.0
 
 
 func _walk(w: Dictionary, dt: float) -> void:
@@ -639,8 +648,14 @@ func _walk(w: Dictionary, dt: float) -> void:
 		w.dir = -1.0
 		n.rotation.y = 0.0
 	n.position = Vector3(n.position.x, 0.0 if _in_cross(z, z) else 0.15, z)
-	w.phase += w.v * dt * PI / 0.65
-	people.pose(w.rig, w.phase, clampf(w.v / 0.8, 0.0, 1.0))
+	var c: Dictionary = w.c
+	var moving: bool = w.v > 0.25
+	if moving != w.walking:
+		w.walking = moving
+		katcho.play(c, moving)
+	var ap: AnimationPlayer = c.ap
+	if ap:
+		ap.speed_scale = maxf(w.v, 0.3) / c.spec.stride if moving else 1.0
 
 
 func _traffic() -> void:
@@ -664,14 +679,18 @@ func _traffic() -> void:
 
 
 func _person(p: Vector3) -> void:
-	var r := people.rig(_ped_seed())
-	var hs: float = r.body.scale.y
-	people.pose(r, 0.0, 0.0)
-	var sh: Array = r.shoulders
-	sh[0].rotation.z = -rng.randf_range(0.04, 0.14)
-	sh[1].rotation.z = rng.randf_range(0.04, 0.14)
-	_bake(r.root, Transform3D(Basis(Vector3.UP, rng.randf() * TAU), p))
-	r.root.free()
+	for q in placed:
+		if Vector2(p.x - q.x, p.z - q.z).length_squared() < 0.64:
+			return
+	placed.append(p)
+	var hs := rng.randf_range(0.95, 1.05)
+	var c := _civilian(1.72 * hs)
+	var r: Node3D = c.root
+	r.position = p
+	r.rotation.y = rng.randf() * TAU
+	world.add_child(r)
+	katcho.play(c, false, rng.randf() * 4.0, rng.randf_range(0.85, 1.1))
+	statics.append({"ap": c.ap, "pos": p})
 	solid(p + Vector3(0, 0.875 * hs, 0), Vector3(0.5, 1.75 * hs, 0.32))
 
 

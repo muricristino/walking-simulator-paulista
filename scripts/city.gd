@@ -18,6 +18,8 @@ var lamps := 0
 var walls: StaticBody3D
 var floors: StaticBody3D
 var player: CharacterBody3D
+var movers := []
+var walkers := []
 
 
 func _ready() -> void:
@@ -467,7 +469,7 @@ func _furniture() -> void:
 				if rng.randf() < 0.75 and not (sx > 0 and tz > -36.0):
 					_tree(Vector3(sx * rng.randf_range(18.6, 19.2), 0.15, tz + rng.randf_range(-2, 2)), rng.randf_range(0.9, 1.25))
 			tz -= rng.randf_range(11, 16)
-	_signal(16.6, -44.0, 1.0, true)
+	_signal(16.6, -44.0, 1.0, false)
 	_signal(-16.6, -52.0, -1.0, true)
 	_signal(16.6, CROSS[0] + 10.0, 1.0, false)
 	_signal(-16.6, CROSS[0] - 10.0, -1.0, false)
@@ -503,23 +505,26 @@ func _banca(p: Vector3) -> void:
 var car_colors := [Color(0.85, 0.85, 0.83), Color(0.6, 0.62, 0.64), Color(0.1, 0.1, 0.11), Color(0.6, 0.08, 0.07), Color(0.12, 0.18, 0.35), Color(0.35, 0.36, 0.38), Color(0.9, 0.9, 0.88)]
 
 
-func _car(x: float, z: float, toward: bool) -> void:
+func _car(x: float, z: float, toward: bool, g: Geo = null) -> void:
+	var gg := g if g else geo
 	var key := "car%d" % (rng.randi() % car_colors.size())
 	if not M.has(key):
 		M[key] = mat(Tex.flat(car_colors[int(key.substr(3))], 8, 0.03, 0.2, 40), Color.WHITE)
 		geo.add_mat(key, M[key])
+		gg.add_mat(key, M[key])
 	var f := 1.0 if toward else -1.0
-	geo.box(key, Vector3(x, 0.72, z), Vector3(1.8, 0.75, 4.3), Vector2(2, 1))
-	solid(Vector3(x, 0.85, z), Vector3(1.9, 1.7, 4.4))
-	geo.box(key, Vector3(x, 1.38, z - f * 0.2), Vector3(1.6, 0.56, 2.2), Vector2(2, 1))
-	geo.box("dark", Vector3(x, 1.38, z - f * 0.2 + f * 1.11), Vector3(1.5, 0.48, 0.02), Vector2(1, 1))
-	geo.box("dark", Vector3(x, 1.38, z - f * 0.2 - f * 1.11), Vector3(1.5, 0.48, 0.02), Vector2(1, 1))
-	geo.box("dark", Vector3(x, 0.32, z), Vector3(1.86, 0.5, 3.2), Vector2(1, 1))
+	gg.box(key, Vector3(x, 0.72, z), Vector3(1.8, 0.75, 4.3), Vector2(2, 1))
+	if not g:
+		solid(Vector3(x, 0.85, z), Vector3(1.9, 1.7, 4.4))
+	gg.box(key, Vector3(x, 1.38, z - f * 0.2), Vector3(1.6, 0.56, 2.2), Vector2(2, 1))
+	gg.box("dark", Vector3(x, 1.38, z - f * 0.2 + f * 1.11), Vector3(1.5, 0.48, 0.02), Vector2(1, 1))
+	gg.box("dark", Vector3(x, 1.38, z - f * 0.2 - f * 1.11), Vector3(1.5, 0.48, 0.02), Vector2(1, 1))
+	gg.box("dark", Vector3(x, 0.32, z), Vector3(1.86, 0.5, 3.2), Vector2(1, 1))
 	var front := z + f * 2.16
 	var back := z - f * 2.16
 	for side in [-0.65, 0.65]:
-		geo.box("head", Vector3(x + side, 0.85, front), Vector3(0.35, 0.16, 0.04), Vector2(1, 1))
-		geo.box("tail", Vector3(x + side, 0.9, back), Vector3(0.35, 0.14, 0.04), Vector2(1, 1))
+		gg.box("head", Vector3(x + side, 0.85, front), Vector3(0.35, 0.16, 0.04), Vector2(1, 1))
+		gg.box("tail", Vector3(x + side, 0.9, back), Vector3(0.35, 0.14, 0.04), Vector2(1, 1))
 
 
 func _bus(x: float, z: float, toward: bool) -> void:
@@ -543,14 +548,113 @@ func _bus(x: float, z: float, toward: bool) -> void:
 		geo.box("tail", Vector3(x + side * 1.05, 1.0, back), Vector3(0.22, 0.4, 0.04), Vector2(1, 1))
 
 
+func _moving_car(x: float, z: float, v: float) -> void:
+	var g := Geo.new()
+	for k in geo.mats:
+		g.add_mat(k, geo.mats[k])
+	_car(0.0, 0.0, false, g)
+	var body := AnimatableBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.sync_to_physics = false
+	var cs := CollisionShape3D.new()
+	var b := BoxShape3D.new()
+	b.size = Vector3(1.9, 1.7, 4.4)
+	cs.shape = b
+	cs.position = Vector3(0, 0.85, 0)
+	body.add_child(cs)
+	g.build(body)
+	body.position = Vector3(x, 0, z)
+	world.add_child(body)
+	movers.append({"node": body, "v": v, "z0": -420.0, "z1": 50.0})
+
+
+func _walker(x: float, z: float, dir: float) -> void:
+	var sk := _cmat("skin", skin, rng.randi() % skin.size())
+	var sh := _cmat("shirt", shirts, rng.randi() % shirts.size())
+	var lg := _cmat("shirt", shirts, [1, 3, 6][rng.randi() % 3])
+	var hs := rng.randf_range(0.92, 1.08)
+	var body := AnimatableBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.sync_to_physics = false
+	var cs := CollisionShape3D.new()
+	var b := BoxShape3D.new()
+	b.size = Vector3(0.5, 1.7 * hs, 0.34)
+	cs.shape = b
+	cs.position = Vector3(0, 0.85 * hs, 0)
+	body.add_child(cs)
+	var top := Node3D.new()
+	body.add_child(top)
+	top.add_child(_part(M[sh], Vector3(0.48, 0.62 * hs, 0.28), Vector3(0, 1.12 * hs, 0)))
+	top.add_child(_part(M[sk], Vector3(0.22, 0.26, 0.22), Vector3(0, 1.57 * hs, 0)))
+	var legs := []
+	for side in [-0.1, 0.1]:
+		var hip := Node3D.new()
+		hip.position = Vector3(side, 0.84 * hs, 0)
+		hip.add_child(_part(M[lg], Vector3(0.17, 0.84 * hs, 0.22), Vector3(0, -0.42 * hs, 0)))
+		body.add_child(hip)
+		legs.append(hip)
+	body.position = Vector3(x, 0.15, z)
+	body.rotation.y = 0.0 if dir < 0.0 else PI
+	world.add_child(body)
+	walkers.append({"node": body, "top": top, "legs": legs, "dir": dir, "speed": rng.randf_range(1.1, 1.5), "phase": rng.randf() * TAU, "v": 0.0})
+
+
+func _part(m: Material, size: Vector3, pos: Vector3) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = size
+	mi.mesh = bm
+	mi.material_override = m
+	mi.position = pos
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mi
+
+
+func _physics_process(dt: float) -> void:
+	for c in movers:
+		var n: Node3D = c.node
+		var z: float = n.position.z + c.v * dt
+		if z < c.z0:
+			z += c.z1 - c.z0
+		n.position.z = z
+	for w in walkers:
+		_walk(w, dt)
+
+
+func _walk(w: Dictionary, dt: float) -> void:
+	var n: Node3D = w.node
+	var want: float = w.speed
+	if player:
+		var d := player.global_position - n.position
+		if absf(d.x) < 0.75 and d.z * w.dir > 0.0 and d.z * w.dir < 1.5:
+			want = 0.0
+	w.v = lerpf(w.v, want, 1.0 - exp(-6.0 * dt))
+	var z: float = n.position.z + w.dir * w.v * dt
+	if z < -330.0:
+		w.dir = 1.0
+		n.rotation.y = PI
+	elif z > 45.0:
+		w.dir = -1.0
+		n.rotation.y = 0.0
+	n.position = Vector3(n.position.x, 0.0 if _in_cross(z, z) else 0.15, z)
+	w.phase += w.v * dt * PI / 0.65
+	var a: float = sin(w.phase) * 0.45 * clampf(w.v / 0.8, 0.0, 1.0)
+	w.legs[0].rotation.x = a
+	w.legs[1].rotation.x = -a
+	w.top.position.y = absf(cos(w.phase)) * 0.03 * clampf(w.v, 0.0, 1.0)
+
+
 func _traffic() -> void:
 	var lanes := [3.75, 7.25, 10.75]
 	for lx in lanes:
 		var z := rng.randf_range(-22, -40)
-		while z > -520.0:
-			if not _in_cross(z - 3, z + 3):
-				_car(lx, z, false)
-			z -= rng.randf_range(9, 30)
+		var v := -rng.randf_range(8.0, 11.5)
+		z = 50.0
+		while z > -420.0:
+			_moving_car(lx, z, v)
+			z -= rng.randf_range(18, 42)
 		z = rng.randf_range(-62, -70)
 		while z > -520.0:
 			if not _in_cross(z - 3, z + 3):
@@ -591,13 +695,16 @@ func _people() -> void:
 		var z := rng.randf_range(-6, -320)
 		if _in_cross(z - 1, z + 1):
 			continue
-		_person(Vector3(sx * rng.randf_range(20, 29), 0.15, z))
+		_person(Vector3(sx * rng.randf_range(23.2, 29), 0.15, z))
 	for i in 40:
 		_person(Vector3(rng.randf_range(-56, -31), 0.16, rng.randf_range(MASP_Z.x + 2, MASP_Z.y - 2)))
 	for i in 10:
 		_person(Vector3(rng.randf_range(-15, -5), 0.0, rng.randf_range(-46, -50)))
 	for i in 14:
-		_person(Vector3(rng.randf_range(18.5, 28.0), 0.15, rng.randf_range(-24, -60)))
+		_person(Vector3(rng.randf_range(23.2, 28.0), 0.15, rng.randf_range(-24, -60)))
+	for sx in [-1.0, 1.0]:
+		for i in 16:
+			_walker(sx * rng.randf_range(20.4, 22.2), rng.randf_range(-320, 40), -1.0 if rng.randf() < 0.5 else 1.0)
 
 
 func _camera() -> void:

@@ -29,12 +29,25 @@ var sun: DirectionalLight3D
 var fill: DirectionalLight3D
 var lamps := []
 var lamp_mat: ShaderMaterial
+var dia := false
+var foto := -1
+var vista := "frente"
+var points := []
 
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	novo = not args.has("--atual")
+	rio.use_models = novo
 	noite = args.has("--noite")
+	dia = args.has("--dia")
+	var fi := args.find("--foto")
+	if fi >= 0 and fi + 1 < args.size():
+		foto = int(args[fi + 1]) - 1
+	var vi := args.find("--vista")
+	if vi >= 0 and vi + 1 < args.size():
+		vista = args[vi + 1]
+	points = JSON.parse_string(FileAccess.get_file_as_string("res://assets/rioclaro/points.json")).points
 	var ci := args.find("--cam")
 	if ci >= 0 and ci + 1 < args.size():
 		cam_i = int(args[ci + 1])
@@ -93,6 +106,22 @@ func _mat(tex: Texture2D, emit := Color.BLACK, unshaded := 0.0) -> ShaderMateria
 
 
 func _place_cam() -> void:
+	if foto >= 0:
+		var q: Dictionary = points[foto]
+		var p := Vector3(q.p[0], 0.0, q.p[1])
+		p.y = rio.street_y(p.x, p.z) + (0.17 if foto > 0 and foto < 5 else 0.0) + 2.4
+		var d := Vector3(q.dir[0], 0.0, q.dir[1])
+		p += d * float(q.get("ds", 0.0)) + Vector3(d.z, 0.0, -d.x) * float(q.get("dt", 0.0))
+		p.y = rio.street_y(p.x, p.z) + (0.17 if foto > 0 and foto < 5 else 0.0) + 2.4
+		if vista == "esq":
+			d = d.rotated(Vector3.UP, PI * 0.5)
+		elif vista == "dir":
+			d = d.rotated(Vector3.UP, -PI * 0.5)
+		cam.projection = Camera3D.PROJECTION_PERSPECTIVE
+		cam.position = p
+		cam.look_at(p + d)
+		env.fog_enabled = true
+		return
 	var c: Array = CAMS[cam_i]
 	cam.position = c[0]
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL if cam_i == 3 else Camera3D.PROJECTION_PERSPECTIVE
@@ -104,6 +133,7 @@ func _place_cam() -> void:
 		return
 	cam.look_at(c[1])
 	cam.rotate_y(yaw)
+	env.fog_enabled = cam_i != 3
 
 
 func _env() -> void:
@@ -135,7 +165,22 @@ func _env() -> void:
 
 
 func _time() -> void:
-	if noite:
+	if dia and not noite:
+		sky_mat.set_shader_parameter("zenith", Vector3(0.25, 0.42, 0.75))
+		sky_mat.set_shader_parameter("mid", Vector3(0.55, 0.68, 0.85))
+		sky_mat.set_shader_parameter("horizon", Vector3(0.85, 0.88, 0.9))
+		env.ambient_light_color = Color(0.62, 0.64, 0.7)
+		env.ambient_light_energy = 0.9
+		env.fog_light_color = Color(0.7, 0.75, 0.82)
+		sun.light_color = Color(1.0, 0.95, 0.85)
+		sun.light_energy = 0.85
+		sun.rotation_degrees = Vector3(-55, 150, 0)
+		fill.light_color = Color(0.6, 0.65, 0.8)
+		fill.light_energy = 0.3
+		osm.set_glow(0.0)
+		rio.osm.set_glow(0.0)
+		rio.models.set_glow(0.0, false)
+	elif noite:
 		sky_mat.set_shader_parameter("zenith", Vector3(0.01, 0.01, 0.04))
 		sky_mat.set_shader_parameter("mid", Vector3(0.05, 0.04, 0.09))
 		sky_mat.set_shader_parameter("horizon", Vector3(0.25, 0.14, 0.12))
@@ -146,6 +191,8 @@ func _time() -> void:
 		fill.light_color = Color(0.35, 0.4, 0.7)
 		fill.light_energy = 0.12
 		osm.set_glow(1.15)
+		rio.osm.set_glow(1.15)
+		rio.models.set_glow(1.15, true)
 	else:
 		sky_mat.set_shader_parameter("zenith", Vector3(0.05, 0.05, 0.16))
 		sky_mat.set_shader_parameter("mid", Vector3(0.32, 0.16, 0.34))
@@ -158,6 +205,8 @@ func _time() -> void:
 		fill.light_color = Color(0.45, 0.5, 0.85)
 		fill.light_energy = 0.25
 		osm.set_glow(0.18)
+		rio.osm.set_glow(0.18)
+		rio.models.set_glow(0.18, false)
 	for l in lamps:
 		l.light_energy = 12.0 if noite else 7.0
 	lamp_mat.set_shader_parameter("emit", Vector3(2.2, 1.2, 0.45) if noite else Vector3(1.4, 0.9, 0.45))

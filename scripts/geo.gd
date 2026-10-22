@@ -105,3 +105,7 @@ func build(parent: Node) -> void:
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.name = key
 		parent.add_child(mi)
+
+
+func append(key: String, mesh: Mesh, xf: Transform3D) -> void:
+	_st(key).append_from(mesh, 0, xf)

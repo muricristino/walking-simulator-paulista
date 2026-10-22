@@ -6,6 +6,7 @@ const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(320, 240)
 const CROSS := [-150.0, -380.0, -560.0]
 const MASP_Z := Vector2(-131.0, -53.0)
+const SKIP := [[-1.0, -226.0, -184.0]]
 
 var vp: SubViewport
 var world: Node3D
@@ -87,7 +88,7 @@ func _materials() -> void:
 	M.tail = mat(white, Color.WHITE, null, 0.0, Color(1.6, 0.05, 0.03), 1.0)
 	M.sign = mat(white, Color.WHITE, null, 0.0, Color(1.6, 0.7, 0.1), 1.0)
 	var ms := Tex.masp_glass(15)
-	M.masp_glass = mat(ms[0], Color.WHITE, ms[1], 1.6)
+	M.masp_glass = mat(ms[0], Color.WHITE, ms[1], 0.9)
 	var leaves := [Color(0.13, 0.25, 0.1), Color(0.18, 0.28, 0.09), Color(0.1, 0.2, 0.12)]
 	for i in leaves.size():
 		M["leaf%d" % i] = mat(Tex.leaves(20 + i, leaves[i]))
@@ -161,7 +162,7 @@ func _street() -> void:
 		var z0: float = s[1]
 		var z1: float = s[0]
 		for sx in [-1.0, 1.0]:
-			_raised("mosaic", sx * 16.0, sx * 30.0, z0, z1, 0.15, Vector2(2, 2))
+			_raised("mosaic", sx * 16.0, sx * 30.0, z0, z1, 0.15, Vector2(0.8, 0.8))
 	for s in [[zf, CROSS[0] + 9.0], [CROSS[0] - 9.0, zb]]:
 		_raised("bike", -1.6, 1.6, s[1], s[0], 0.2, Vector2(4, 4))
 		_raised("curb", -2.0, -1.6, s[1], s[0], 0.2, Vector2(2, 2))
@@ -223,33 +224,33 @@ func _building(cx: float, cz: float, w: float, d: float, h: float, antenna: bool
 	var p: Array = palettes[rng.randi() % palettes.size()]
 	var cols := maxi(4, int(maxf(w, d) / 3.0))
 	var rows := maxi(4, int(h / 3.6))
-	var t := Tex.facade(100 + bld_count, cols, rows, p[0], p[1], p[2], rng.randf_range(0.3, 0.65))
-	geo.add_mat(key, mat(t[0], Color.WHITE, t[1], 1.25))
+	var t := Tex.facade(100 + bld_count, cols, rows, p[0], p[1], p[2], rng.randf_range(0.2, 0.5))
+	geo.add_mat(key, mat(t[0], Color.WHITE, t[1], 1.0))
 	geo.box(key, Vector3(cx, h * 0.5, cz), Vector3(w, h, d), Vector2(cols * 3.0, rows * 3.6), Vector2.ZERO, 10.0, "roof")
 	if rng.randf() < 0.5:
 		geo.box("roof", Vector3(cx + rng.randf_range(-w, w) * 0.2, h + 2.5, cz + rng.randf_range(-d, d) * 0.2), Vector3(w * 0.4, 5.0, d * 0.4), Vector2(4, 4))
 	if antenna:
-		_antenna(Vector3(cx + rng.randf_range(-w, w) * 0.25, h, cz + rng.randf_range(-d, d) * 0.25), rng.randf_range(14, 34), rng.randf() < 0.35)
+		_antenna(Vector3(cx + rng.randf_range(-w, w) * 0.25, h, cz + rng.randf_range(-d, d) * 0.25), rng.randf_range(22, 50), rng.randf() < 0.35)
 
 
 func _antenna(base: Vector3, height: float, striped: bool) -> void:
 	var key := "tower" if striped else "metal"
-	var s := height * 0.06 + 0.6
+	var s := height * 0.07 + 1.0
 	var legs := [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]
 	for l in legs:
 		var a := base + Vector3(l.x * s, 0, l.y * s)
 		var b := base + Vector3(l.x * 0.25, height, l.y * 0.25)
-		var mi := _rod(a, b, 0.22, M[key])
+		var mi := _rod(a, b, 0.7, M[key])
 		world.add_child(mi)
 	var y := 3.0
 	while y < height:
 		var t := y / height
 		var r := lerpf(s, 0.25, t)
-		geo.box(key, base + Vector3(0, y, 0), Vector3(r * 2.0, 0.2, r * 2.0), Vector2(1, 2), Vector2.ZERO, 50.0)
-		y += 3.5
-	geo.box("red_light", base + Vector3(0, height + 0.3, 0), Vector3(0.6, 0.6, 0.6), Vector2(1, 1))
-	geo.box("red_light", base + Vector3(0, height * 0.6, 0), Vector3(0.5, 0.5, 0.5), Vector2(1, 1))
-	geo.box(key, base + Vector3(0, height + 2.5, 0), Vector3(0.15, 4.0, 0.15), Vector2(1, 2))
+		geo.box(key, base + Vector3(0, y, 0), Vector3(r * 2.0, 0.45, r * 2.0), Vector2(1, 2), Vector2.ZERO, 50.0)
+		y += 5.0
+	geo.box("red_light", base + Vector3(0, height + 0.6, 0), Vector3(1.4, 1.2, 1.4), Vector2(1, 1))
+	geo.box("red_light", base + Vector3(0, height * 0.55, 0), Vector3(1.0, 1.0, 1.0) + Vector3(s, 0, s), Vector2(1, 1))
+	geo.box(key, base + Vector3(0, height + 5.0, 0), Vector3(0.5, 8.0, 0.5), Vector2(1, 2))
 
 
 func _rod(a: Vector3, b: Vector3, thick: float, m: Material) -> MeshInstance3D:
@@ -282,21 +283,30 @@ func _buildings() -> void:
 			if z0 < MASP_Z.y and z1 > MASP_Z.x:
 				z = MASP_Z.x - 4.0
 				continue
+			var skipped := false
+			for sk in SKIP:
+				if sk[0] == sx and z0 < sk[2] and z1 > sk[1]:
+					z = sk[1] - 2.0
+					skipped = true
+			if skipped:
+				continue
 			var d := rng.randf_range(22, 34)
 			var tall := rng.randf()
-			var h := rng.randf_range(28, 60) if tall < 0.4 else rng.randf_range(60, 125)
+			var h := rng.randf_range(26, 55) if tall < 0.4 else rng.randf_range(55, 100)
 			var cx: float = sx * (31.0 + d * 0.5 + rng.randf_range(0, 2))
-			_building(cx, (z0 + z1) * 0.5, d, w - rng.randf_range(1, 4), h, rng.randf() < 0.45 and h > 50)
+			_building(cx, (z0 + z1) * 0.5, d, w - rng.randf_range(1, 4), h, rng.randf() < 0.8 and h > 40)
 			z = z0
 		z = 20.0
 		while z > -720.0:
 			var w := rng.randf_range(24, 44)
 			var h := rng.randf_range(70, 160)
 			var cx: float = sx * rng.randf_range(78, 110)
-			_building(cx, z - w * 0.5, rng.randf_range(24, 36), w, h, rng.randf() < 0.55)
+			if sx < 0 and z - w < -40.0 and z > -150.0:
+				z -= w
+				continue
+			_building(cx, z - w * 0.5, rng.randf_range(24, 36), w, h, rng.randf() < 0.7)
 			z -= w + rng.randf_range(4, 20)
 	_gazeta()
-	_fiesp()
 
 
 func _next_after_cross(z0: float) -> float:
@@ -366,13 +376,22 @@ func _lamp_post(x: float, z: float, light: bool) -> void:
 	geo.box("metal", Vector3(x, 5.0, z), Vector3(0.25, 10.0, 0.25), Vector2(1, 4))
 	geo.box("metal", Vector3(x - sx * 1.6, 9.9, z), Vector3(3.2, 0.18, 0.18), Vector2(1, 1))
 	geo.box("lamp", Vector3(x - sx * 3.0, 9.75, z), Vector3(0.9, 0.22, 0.4), Vector2(1, 1))
+	geo.box("metal", Vector3(x + sx * 0.8, 6.4, z), Vector3(1.6, 0.14, 0.14), Vector2(1, 1))
+	geo.box("lamp", Vector3(x + sx * 1.5, 6.25, z), Vector3(0.6, 0.18, 0.3), Vector2(1, 1))
 	if light:
+		var sl := OmniLight3D.new()
+		sl.position = Vector3(x + sx * 1.5, 5.8, z)
+		sl.light_color = Color(1.0, 0.72, 0.42)
+		sl.light_energy = 4.0
+		sl.omni_range = 11.0
+		sl.omni_attenuation = 0.9
+		world.add_child(sl)
 		var ol := OmniLight3D.new()
 		ol.position = Vector3(x - sx * 3.0, 9.0, z)
 		ol.light_color = Color(1.0, 0.68, 0.38)
-		ol.light_energy = 2.4
-		ol.omni_range = 17.0
-		ol.omni_attenuation = 1.2
+		ol.light_energy = 9.0
+		ol.omni_range = 16.0
+		ol.omni_attenuation = 0.9
 		world.add_child(ol)
 
 
@@ -390,19 +409,19 @@ func _signal(x: float, z: float, facing: float, red: bool) -> void:
 
 
 func _furniture() -> void:
-	var z := 30.0
+	var z := -14.0
 	var i := 0
 	while z > -620.0:
 		if not _in_cross(z - 1.0, z + 1.0, 2.0):
-			_lamp_post(17.0, z, z > -260.0)
-			_lamp_post(-17.0, z - 16.0, z > -260.0)
+			_lamp_post(17.0, z, z > -200.0)
+			_lamp_post(-17.0, z - 16.0, z > -200.0)
 		z -= 32.0
 		i += 1
 	for sx in [-1.0, 1.0]:
 		var tz := 22.0
 		while tz > -600.0:
-			if not _in_cross(tz - 3.0, tz + 3.0, 2.0) and not (sx < 0 and tz < MASP_Z.y + 4 and tz > MASP_Z.x - 4):
-				if rng.randf() < 0.75:
+			if not _in_cross(tz - 3.0, tz + 3.0, 2.0) and not (sx < 0 and tz < MASP_Z.y + 22 and tz > MASP_Z.x - 4):
+				if rng.randf() < 0.75 and not (sx > 0 and tz > -36.0):
 					_tree(Vector3(sx * rng.randf_range(18.6, 19.2), 0.15, tz + rng.randf_range(-2, 2)), rng.randf_range(0.9, 1.25))
 			tz -= rng.randf_range(11, 16)
 	_signal(16.6, -44.0, 1.0, true)
@@ -410,11 +429,29 @@ func _furniture() -> void:
 	_signal(16.6, CROSS[0] + 10.0, 1.0, false)
 	_signal(-16.6, CROSS[0] - 10.0, -1.0, false)
 	if M.has("placa"):
-		geo.box("metal", Vector3(17.6, 1.5, -10.0), Vector3(0.08, 3.0, 0.08), Vector2(1, 1))
-		geo.quad("placa", Vector3(17.6, 2.7, -10.0), Vector3(17.6, 2.7, -12.2), Vector3(17.6, 3.25, -12.2), Vector3(17.6, 3.25, -10.0), Vector3.LEFT, Vector2(2.2, 0.55))
-		geo.quad("placa", Vector3(17.62, 2.7, -12.2), Vector3(17.62, 2.7, -10.0), Vector3(17.62, 3.25, -10.0), Vector3(17.62, 3.25, -12.2), Vector3.RIGHT, Vector2(2.2, 0.55))
+		geo.box("metal", Vector3(19.0, 1.8, -26.0), Vector3(0.1, 3.6, 0.1), Vector2(1, 1))
+		geo.quad("placa", Vector3(17.7, 2.9, -25.95), Vector3(20.3, 2.9, -25.95), Vector3(20.3, 3.6, -25.95), Vector3(17.7, 3.6, -25.95), Vector3.BACK, Vector2(2.6, 0.7))
+	_banca(Vector3(26.5, 0.15, -36.0))
 	for k in 6:
 		geo.box("dark", Vector3(-23.0, 0.6, -20.0 - k * 7.0), Vector3(0.6, 0.9, 1.8), Vector2(1, 1))
+
+
+func _banca(p: Vector3) -> void:
+	if not M.has("banca"):
+		M.banca = mat(Tex.flat(Color(0.12, 0.32, 0.2), 8, 0.03, 0.3, 50))
+		geo.add_mat("banca", M.banca)
+		var t := Tex.magazines(51)
+		M.mags = mat(t, Color.WHITE, t, 0.55)
+		geo.add_mat("mags", M.mags)
+	geo.box("banca", p + Vector3(0, 1.35, 0), Vector3(3.0, 2.7, 6.0), Vector2(1, 1))
+	geo.box("banca", p + Vector3(-0.3, 2.85, 0), Vector3(3.8, 0.25, 6.8), Vector2(1, 1))
+	geo.quad("mags", p + Vector3(-1.52, 0.3, 2.8), p + Vector3(-1.52, 0.3, -2.8), p + Vector3(-1.52, 2.5, -2.8), p + Vector3(-1.52, 2.5, 2.8), Vector3.LEFT, Vector2(5.6, 2.2))
+	var ol := OmniLight3D.new()
+	ol.position = p + Vector3(-2.5, 2.4, 0)
+	ol.light_color = Color(0.9, 0.95, 1.0)
+	ol.light_energy = 1.2
+	ol.omni_range = 6.0
+	world.add_child(ol)
 
 
 var car_colors := [Color(0.85, 0.85, 0.83), Color(0.6, 0.62, 0.64), Color(0.1, 0.1, 0.11), Color(0.6, 0.08, 0.07), Color(0.12, 0.18, 0.35), Color(0.35, 0.36, 0.38), Color(0.9, 0.9, 0.88)]
@@ -461,7 +498,7 @@ func _bus(x: float, z: float, toward: bool) -> void:
 func _traffic() -> void:
 	var lanes := [3.75, 7.25, 10.75]
 	for lx in lanes:
-		var z := rng.randf_range(-20, -60)
+		var z := rng.randf_range(-22, -40)
 		while z > -520.0:
 			if not _in_cross(z - 3, z + 3):
 				_car(lx, z, false)
@@ -471,7 +508,7 @@ func _traffic() -> void:
 			if not _in_cross(z - 3, z + 3):
 				_car(-lx, z, true)
 			z -= rng.randf_range(7, 22)
-	_bus(14.25, -34.0, false)
+	_bus(14.25, -46.0, false)
 	_bus(14.25, -120.0, false)
 	_bus(-14.25, -66.0, true)
 	_bus(-14.25, -200.0, true)
@@ -510,6 +547,8 @@ func _people() -> void:
 		_person(Vector3(rng.randf_range(-56, -31), 0.16, rng.randf_range(MASP_Z.x + 2, MASP_Z.y - 2)))
 	for i in 10:
 		_person(Vector3(rng.randf_range(-15, -5), 0.0, rng.randf_range(-46, -50)))
+	for i in 14:
+		_person(Vector3(rng.randf_range(18.5, 28.0), 0.15, rng.randf_range(-24, -60)))
 
 
 func _camera() -> void:
@@ -517,9 +556,9 @@ func _camera() -> void:
 	cam.fov = 62.0
 	cam.near = 0.2
 	cam.far = 900.0
-	cam.position = Vector3(15.0, 1.75, 8.0)
+	cam.position = Vector3(21.5, 2.3, -12.0)
 	world.add_child(cam)
-	cam.look_at(Vector3(-14.0, 9.0, -80.0))
+	cam.look_at(Vector3(-14.0, 12.5, -100.0))
 	cam.current = true
 
 
@@ -528,7 +567,6 @@ func _screen() -> void:
 	vp.add_child(cl)
 	var cr := ColorRect.new()
 	cr.set_anchors_preset(Control.PRESET_FULL_RECT)
-	cr.size = Vector2(RES)
 	var sm := ShaderMaterial.new()
 	sm.shader = load("res://scripts/screen.gdshader")
 	cr.material = sm

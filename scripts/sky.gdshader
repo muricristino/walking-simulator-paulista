@@ -19,7 +19,7 @@ void sky() {
 	c = mix(c, zenith, smoothstep(0.15, 0.6, h));
 	c += horizon * pow(s, 40.0) * 0.6;
 	vec2 g = floor(d.xz / max(d.y, 0.05) * 60.0);
-	float st = step(0.996, hash(g)) * smoothstep(0.3, 0.8, h);
+	float st = step(0.997, hash(g)) * smoothstep(0.3, 0.8, h);
 	c += vec3(st) * 0.5;
 	if (h < 0.0) {
 		c = mix(c, ground, smoothstep(0.0, -0.1, h));

@@ -55,4 +55,5 @@
 - tex/*.png: painted procedurally by tools/blender/rc_textures.py (herringbone pavers, wood deck, copper slats, granite, glass, panels, concrete, fences, graffiti wall, casarão facade, roof tiles, residential facades, cars, leaves, plane-tree bark), except:
   - asphalt.png: copy of assets/road/b_128.png (ambientCG Asphalt019, CC0 1.0)
   - bark.png: copy of assets/props/bark.png (ambientCG Bark004, CC0 1.0)
+  - placa_*.png and banca_sign.png: text drawn locally with ImageMagick and system fonts (Arial Narrow Bold, Times New Roman Bold)
   - bark_ficus.png: ambientCG Bark012 (https://ambientcg.com/view?id=Bark012), CC0 1.0, downscaled and darkened

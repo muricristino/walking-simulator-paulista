@@ -8,6 +8,7 @@ const Paulista := preload("res://scripts/paulista.gd")
 const Traffic := preload("res://scripts/traffic.gd")
 const Crowd := preload("res://scripts/crowd.gd")
 const Hud := preload("res://scripts/hud.gd")
+const Audio := preload("res://scripts/audio.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(640, 480)
 
@@ -23,6 +24,7 @@ var paulista: Paulista
 var traffic: Traffic
 var crowd: Crowd
 var hud: Hud
+var audio: Audio
 var rio: RefCounted:
 	get:
 		return paulista.rio if paulista else null
@@ -50,6 +52,7 @@ func _ready() -> void:
 	traffic = _module(Traffic, "Traffic")
 	crowd = _module(Crowd, "Crowd")
 	hud = _module(Hud, "Hud")
+	audio = _module(Audio, "Audio")
 	vp = SubViewport.new()
 	vp.size = RES
 	vp.msaa_3d = Viewport.MSAA_DISABLED
@@ -86,6 +89,7 @@ func _ready() -> void:
 	_camera()
 	_screen()
 	hud.build(self)
+	audio.build(self)
 	_maybe_shot()
 
 

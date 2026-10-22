@@ -1,15 +1,15 @@
 extends Node
 
 const Surface := preload("res://scripts/audio_surface.gd")
+const Layout := preload("res://scripts/layout.gd")
 const DIR := "res://assets/audio/"
 const KINDS: Array[StringName] = [&"concrete", &"asphalt", &"paver", &"wood", &"grass"]
 const STEP_DB := {&"concrete": -11.0, &"asphalt": -11.0, &"paver": -10.0, &"wood": -9.0, &"grass": -12.0}
 const ENGINE_VOICES := 8
 const NPC_VOICES := 6
-const SIGNALS := [Vector3(16.6, 2.4, -44.0), Vector3(-16.6, 2.4, -52.0), Vector3(16.6, 2.4, -140.0), Vector3(-16.6, 2.4, -160.0)]
 const MASP := Rect2(-57.0, -131.0, 28.0, 78.0)
 const TRIANON := Rect2(30.0, -131.0, 62.0, 78.0)
-const AVENUE_Z := Vector2(-760.0, 60.0)
+const AVENUE_Z := Layout.WALK_Z
 const BUSES := [&"Ambience", &"SFX", &"UI"]
 
 var city: Node
@@ -297,10 +297,24 @@ func _crowds() -> void:
 			crowds.append(p3)
 
 
+func _signal_spots() -> Array:
+	var out := []
+	var tr: Variant = city.get("traffic")
+	if tr and tr.has_method("crossings"):
+		for e in tr.crossings():
+			out.append(Vector3(16.6, 2.4, float(e.zhi) + 1.0))
+			out.append(Vector3(-16.6, 2.4, float(e.zlo) - 1.0))
+	else:
+		for w in Layout.crosswalks():
+			out.append(Vector3(16.6, 2.4, float(w.z1) + 1.0))
+			out.append(Vector3(-16.6, 2.4, float(w.z0) - 1.0))
+	return out
+
+
 func _signals() -> void:
 	if not S.has("sfx_crossing_beep"):
 		return
-	for p in SIGNALS:
+	for p in _signal_spots():
 		var s := _p3d(S.sfx_crossing_beep, -14.0, &"SFX", 2.0, 24.0)
 		s.position = p
 		city.world.add_child(s)

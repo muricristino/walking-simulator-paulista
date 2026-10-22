@@ -1,5 +1,102 @@
 import json, math, sys, hashlib
 
+AVENUE_CLIP = 30.5
+STREETS = [(40.0, 12.0, (-1, 1)), (-36.0, 7.0, (-1,)), (-146.0, 12.0, (-1, 1)), (-245.0, 8.0, (-1,)), (-429.0, 12.0, (-1, 1)), (-635.0, 12.0, (-1, 1))]
+MIN_AREA = 10.0
+
+
+def area(poly):
+    return 0.5 * sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1] for i in range(len(poly)))
+
+
+def clip(poly, nx, nz, d):
+    out = []
+    for i in range(len(poly)):
+        a = poly[i]
+        b = poly[(i + 1) % len(poly)]
+        da = a[0] * nx + a[1] * nz - d
+        db = b[0] * nx + b[1] * nz - d
+        if da >= 0:
+            out.append(a)
+        if (da >= 0) != (db >= 0):
+            t = da / (da - db)
+            out.append([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t])
+    return out
+
+
+def inside(pt, poly):
+    c = False
+    j = len(poly) - 1
+    for i in range(len(poly)):
+        xi, zi = poly[i]
+        xj, zj = poly[j]
+        if (zi > pt[1]) != (zj > pt[1]) and pt[0] < (xj - xi) * (pt[1] - zi) / (zj - zi) + xi:
+            c = not c
+        j = i
+    return c
+
+
+def postprocess(buildings):
+    out = []
+    for b in buildings:
+        poly = [list(p) for p in b["p"]]
+        side = 1.0 if sum(p[0] for p in poly) > 0 else -1.0
+        parts = [clip(poly, side, 0.0, AVENUE_CLIP)]
+        for z, half, sides in STREETS:
+            if int(side) not in sides:
+                continue
+            nxt = []
+            for q in parts:
+                if len(q) < 3 or max(p[1] for p in q) <= z - half or min(p[1] for p in q) >= z + half:
+                    nxt.append(q)
+                    continue
+                nxt.append(clip(q, 0.0, -1.0, -(z - half)))
+                nxt.append(clip(q, 0.0, 1.0, z + half))
+            parts = nxt
+        k = 0
+        for q in parts:
+            if len(q) < 3 or abs(area(q)) < MIN_AREA:
+                continue
+            nb = dict(b)
+            nb["p"] = [[round(p[0], 2), round(p[1], 2)] for p in q]
+            nb["seed"] = (b["seed"] + k * 7919) % 100000
+            k += 1
+            out.append(nb)
+    keep = []
+    boxes = []
+    for b in out:
+        xs = [p[0] for p in b["p"]]
+        zs = [p[1] for p in b["p"]]
+        boxes.append((min(xs), max(xs), min(zs), max(zs)))
+    for i, b in enumerate(out):
+        bi = boxes[i]
+        hidden = False
+        for j, a in enumerate(out):
+            if i == j or a["h"] < b["h"]:
+                continue
+            bj = boxes[j]
+            if bi[0] < bj[0] - 0.05 or bi[1] > bj[1] + 0.05 or bi[2] < bj[2] - 0.05 or bi[3] > bj[3] + 0.05:
+                continue
+            if a["h"] == b["h"] and j > i:
+                continue
+            cx = sum(p[0] for p in b["p"]) / len(b["p"])
+            cz = sum(p[1] for p in b["p"]) / len(b["p"])
+            if inside([cx, cz], a["p"]) and all(inside([p[0] + (cx - p[0]) * 0.02, p[1] + (cz - p[1]) * 0.02], a["p"]) for p in b["p"]):
+                hidden = True
+                break
+        if not hidden:
+            keep.append(b)
+    return keep
+
+
+if len(sys.argv) == 4 and sys.argv[1] == "--post":
+    d = json.load(open(sys.argv[2]))
+    n0 = len(d["buildings"])
+    d["buildings"] = postprocess(d["buildings"])
+    json.dump(d, open(sys.argv[3], "w"), ensure_ascii=False)
+    print(n0, "->", len(d["buildings"]), "buildings")
+    sys.exit(0)
+
 src = sys.argv[1:-1]
 out = sys.argv[-1]
 lat0, lon0 = -23.5614, -46.6559
@@ -151,5 +248,6 @@ for e in els:
         h = max(h, 24.0)
     hh = int(hashlib.md5(str(e["id"]).encode()).hexdigest(), 16)
     result.append({"p": gp, "h": round(h, 1), "style": style, "seed": hh % 100000, "name": t.get("name", ""), "front": abs(side) < 45})
+result = postprocess(result)
 json.dump({"masp_side": sign, "buildings": result}, open(out, "w"), ensure_ascii=False)
 print(len(result), "buildings", "specials", list(specials), "styled", sum(1 for r in result if r["style"]))

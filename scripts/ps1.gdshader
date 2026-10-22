@@ -9,6 +9,7 @@ uniform float glow = 0.0;
 uniform vec2 snap_res = vec2(320.0, 240.0);
 uniform float affine = 0.6;
 uniform float unshaded = 0.0;
+uniform float squash = 0.0;
 varying vec3 aff;
 
 void vertex() {
@@ -17,6 +18,7 @@ void vertex() {
 	if (p.w > 0.05) {
 		p.xy = floor(p.xy / p.w * g + 0.5) / g * p.w;
 	}
+	p.z = mix(p.z, p.w, squash);
 	POSITION = p;
 	aff = vec3(UV * p.w, p.w);
 }

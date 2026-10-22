@@ -481,6 +481,24 @@ def signs():
     save("sign_parking", a)
 
 
+def lot():
+    r = np.random.default_rng(31)
+    n = 64
+    a = np.ones((n, n, 3)) * col((0.52, 0.51, 0.48))
+    a += r.normal(0, 0.03, (n, n, 1))
+    for x in range(0, n, 16):
+        a[:, x] *= 0.82
+    for y in range(0, n, 16):
+        a[y, :] *= 0.82
+    sm = r.normal(0, 1, (n // 8 + 1, n // 8 + 1))
+    big = np.kron(sm, np.ones((8, 8)))[:n, :n]
+    big = (big + np.roll(big, 4, 0) + np.roll(big, 4, 1) + np.roll(np.roll(big, 4, 0), 4, 1)) / 4
+    a += big[..., None] * 0.035
+    g = big > 0.9
+    a[g] = col((0.33, 0.40, 0.24)) + r.normal(0, 0.03, (int(g.sum()), 1))
+    save("lot", a)
+
+
 def copy(src, name, resize=None, mod=None):
     args = ["magick", src]
     if resize:
@@ -547,6 +565,7 @@ tent()
 core()
 climber()
 signs()
+lot()
 copy(os.path.join(ROOT, "assets/road/b_128.png"), "asphalt")
 copy(os.path.join(ROOT, "assets/props/bark.png"), "bark")
 if DL:

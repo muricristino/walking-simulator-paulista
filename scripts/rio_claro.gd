@@ -102,7 +102,7 @@ func build(parent: Node3D, skip_near_paulista := 0.0) -> Node3D:
 	_mat("asphalt", Tex.plate("res://assets/road/b_128.png"))
 	_mat("walk", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.mosaic(4))
 	_mat("paving", Tex.plate("res://assets/props/concrete.png"))
-	_mat("ground", Tex.plate("res://assets/rioclaro/tex/sidewalk.png") if models.available() else Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
+	_mat("ground", Tex.plate("res://assets/rioclaro/tex/lot.png") if models.available() else Tex.flat(Color(0.36, 0.34, 0.31), 16, 0.05, 0.4, 77))
 	_mat("curb", Tex.flat(Color(0.62, 0.6, 0.58), 8, 0.03, 0.3, 6))
 	var mroot: Node3D = null
 	if use_models and models.available():
@@ -169,9 +169,9 @@ func along(x: float, z: float) -> float:
 func _terrain(skip: float) -> void:
 	var nx: int = grid.nx
 	var nz: int = grid.nz
-	var step: float = grid.step
-	for j in nz - 1:
-		for i in nx - 1:
+	var step: float = grid.step * 0.5
+	for j in (nz - 1) * 2:
+		for i in (nx - 1) * 2:
 			var x0: float = grid.x0 + i * step
 			var z0: float = grid.z0 + j * step
 			if x0 > -skip:

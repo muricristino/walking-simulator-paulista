@@ -19,6 +19,7 @@ def walk(s, t):
 
 
 strip(k, "asphalt", 133.5, 404.0, -RW, RW, road, step=6.0, tile=(4.0, 4.0))
+strip(k, "asphalt", 404.0, 411.5, -RW, RW, lambda s, t: gy(s, 0.0), step=2.5, tile=(4.0, 4.0))
 
 
 def cross_street(name, J, half, lim, skip_road, skip_walk, walk_sides, walkw=3.0):
@@ -73,7 +74,7 @@ sc_edge, sc_at, sc_u0 = cross_street("Rua São Carlos do Pinhal", frame(138.6, 0
 JP = frame(414.0, 0)
 pm_pts = [tuple(q["p"]) for q in [c for c in DATA["cross"] if c["name"] == "Rua Pamplona"][0]["pts"]]
 probe = frame(395.0, 0)
-pm_edge, pm_at, pm_u0 = cross_street("Rua Pamplona", JP, 5.5, 90.0, 0.0, (9.5, 9.5), (1, -1), 3.5)
+pm_edge, pm_at, pm_u0 = cross_street("Rua Pamplona", JP, 5.5, 150.0, 0.0, (9.5, 9.5), (1, -1), 3.5)
 p0, d0 = pm_at(pm_u0)
 rio_side = 1 if ((probe[0] - p0[0]) * -d0[1] + (probe[1] - p0[1]) * d0[0]) > 0 else -1
 for idx, tex in ((112, "res_white"), (114, "res_cream"), (119, "res_beige"), (109, "res_white"), (110, "res_grey")):
@@ -120,8 +121,8 @@ def fill(at, u0, lim, half, walkw, sides, seed):
             w = r.uniform(16, 24)
             p, d = at(u)
             n = (-d[1], d[0])
-            off0 = half + walkw + r.uniform(5, 8)
-            dep = r.uniform(14, 20)
+            off0 = half + walkw + r.uniform(3, 5.5)
+            dep = r.uniform(16, 22)
             corners = []
             for (du, dn) in ((-w / 2, off0), (w / 2, off0), (w / 2, off0 + dep), (-w / 2, off0 + dep)):
                 corners.append((p[0] + d[0] * du + n[0] * dn * sd, p[1] + d[1] * du + n[1] * dn * sd))
@@ -152,7 +153,7 @@ def fill(at, u0, lim, half, walkw, sides, seed):
 
 
 texs = ["res_white", "res_beige", "res_cream", "res_grey"]
-fill(pm_at, pm_u0, 90.0, 5.5, 3.5, (1, -1), 71)
+fill(pm_at, pm_u0, 150.0, 5.5, 3.5, (1, -1), 71)
 fill(sc_at, sc_u0, 70.0, 4.8, 3.0, (1, -1), 72)
 far = [e for e in pm_edge if e[3] == -rio_side]
 for i, (p, n, o, sd) in enumerate(far[::2]):
@@ -161,6 +162,11 @@ for i, (p, n, o, sd) in enumerate(far[::2]):
 for i, (p, n, o, sd) in enumerate(far[1::5]):
     x, z = p[0] + n[0] * (o - sd * 1.2), p[1] + n[1] * (o - sd * 1.2)
     k.tree((x, street_y(x, z) + CURB, z), 1.2, "sibi" if i % 2 else "ficus", seed=300 + i, crown=5.5)
+for i, (p, n, o, sd) in enumerate(pm_edge[::4]):
+    if i % 2:
+        continue
+    x, z = p[0] + n[0] * sd * 6.3, p[1] + n[1] * sd * 6.3
+    k.tree((x, street_y(x, z) + CURB, z), 1.1, ("sibi", "ficus", "plane")[i % 3], seed=400 + i, crown=5.0)
 for side in (1, -1):
     a, b = (RW, SW) if side > 0 else (-SW, -RW)
     strip(k, "sidewalk", S0, S1, a, b, walk, step=6.0, tile=(2.0, 2.0))
@@ -170,7 +176,7 @@ for side in (1, -1):
 for s in range(int(S0) + 6, 300, 6):
     strip(k, "paint_white", s, s + 3, 0.35, 0.5, lambda s_, t: road(s_, 0) + 0.02, step=3, col=None)
 for off in (-0.12, 0.12):
-    strip(k, "paint_yellow", 300.0, S1, off - 0.06, off + 0.06, lambda s_, t: road(s_, 0) + 0.02, step=6, col=None)
+    strip(k, "paint_yellow", 300.0, 403.0, off - 0.06, off + 0.06, lambda s_, t: road(s_, 0) + 0.02, step=6, col=None)
 for s0 in (145.0, 302.0):
     for i in range(9):
         t0 = -RW + 0.4 + i * 0.95

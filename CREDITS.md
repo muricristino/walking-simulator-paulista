@@ -19,6 +19,8 @@
 - c_*.png: Asphalt026C (https://ambientcg.com/view?id=Asphalt026C)
 - paint_white.png, paint_yellow.png: RoadLines020A (https://ambientcg.com/view?id=RoadLines020A)
 - bike_red.png: tinted from Asphalt015
+- sidewalk_dark.png, sidewalk_light.png, tactile.png: Paulista cast-in-place concrete plates (post-2008 standard), built from ambientCG Concrete017 (https://ambientcg.com/view?id=Concrete017), CC0 1.0: downscaled to 64 px, desaturated, posterized, joints and tactile ridges drawn locally
+- onibus.png, bike_symbol.png: road stencils drawn locally with ImageMagick (Arial Narrow Bold)
 - Downscaled to 64/128/256 px, brightness matched, palette posterized
 
 ## Street props (assets/props)
@@ -30,6 +32,7 @@
 - window.png: crop of ambientCG Facade009 (https://ambientcg.com/view?id=Facade009), CC0 1.0
 - facade_upper.png: crop of ambientCG Facade013 (https://ambientcg.com/view?id=Facade013), CC0 1.0
 - sign0-3.png: generic shop names drawn locally over the concrete photo
+- signs/*.png: São Paulo street name plates (blue) and brown wayfinding plates drawn locally with ImageMagick (Arial Narrow Bold); street names and positions from OpenStreetMap (© OpenStreetMap contributors, ODbL 1.0)
 
 ## Buildings (assets/osm, assets/buildings)
 - Footprints and heights: © OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright), fetched via Overpass API and converted by tools/osm_to_game.py

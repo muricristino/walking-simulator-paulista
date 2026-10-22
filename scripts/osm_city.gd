@@ -18,6 +18,12 @@ var zrange := Vector2(-INF, INF)
 var gaps := []
 var yoff := 0.0
 var corridors := []
+var seg := 6.0
+var near_x := INF
+var cur_seg := 0.0
+var clip_x := 0.0
+var exclude := []
+var collide := true
 
 
 func _init() -> void:
@@ -81,11 +87,12 @@ func build(path: String) -> Node3D:
 func build_data(data: Dictionary) -> Node3D:
 	tools.clear()
 	faces = PackedVector3Array()
-	for b in data.buildings:
-		if _keep(b):
-			_building(b)
+	for b0 in data.buildings:
+		for b in _prepare(b0):
+			if _keep(b):
+				_building(b)
 	var root := Node3D.new()
-	if faces.size() > 0:
+	if collide and faces.size() > 0:
 		var body := StaticBody3D.new()
 		body.collision_layer = 1
 		body.collision_mask = 0
@@ -126,6 +133,43 @@ func _keep(b: Dictionary) -> bool:
 	return true
 
 
+func _prepare(b: Dictionary) -> Array:
+	var poly := PackedVector2Array()
+	var cen := Vector2.ZERO
+	for p in b.p:
+		poly.append(Vector2(p[0], p[1]))
+		cen += Vector2(p[0], p[1])
+	cen /= maxf(poly.size(), 1.0)
+	for r in exclude:
+		if (r as Rect2).has_point(cen):
+			return []
+	if clip_x <= 0.0:
+		return [b]
+	var sd := signf(cen.x)
+	var mn := INF
+	for p in poly:
+		mn = minf(mn, p.x * sd)
+	if mn >= clip_x:
+		return [b]
+	var x0 := sd * clip_x
+	var x1 := sd * 100000.0
+	var half := PackedVector2Array([Vector2(minf(x0, x1), -100000.0), Vector2(maxf(x0, x1), -100000.0), Vector2(maxf(x0, x1), 100000.0), Vector2(minf(x0, x1), 100000.0)])
+	var out := []
+	for q in Geometry2D.intersect_polygons(poly, half):
+		var a := 0.0
+		for i in q.size():
+			a += q[i].x * q[(i + 1) % q.size()].y - q[(i + 1) % q.size()].x * q[i].y
+		if absf(a) * 0.5 < 10.0:
+			continue
+		var nb := b.duplicate()
+		var pts := []
+		for v in q:
+			pts.append([v.x, v.y])
+		nb.p = pts
+		out.append(nb)
+	return out
+
+
 func _pick(kind: String, seed: int) -> String:
 	var pool: Array = pools[kind]
 	return pool[seed % pool.size()]
@@ -150,8 +194,11 @@ func _building(b: Dictionary) -> void:
 	var terreo: String = ["t_shops", "t_shops", "t_lobby", "t_pilotis"][(seed / 11) % 4] if b.get("front", false) else ["t_lobby", "t_pilotis", "t_shops"][(seed / 11) % 3]
 	var module := rng.randf_range(0.9, 1.15)
 	var poly := PackedVector2Array()
+	var mx := INF
 	for p in b.p:
 		poly.append(Vector2(p[0], p[1]))
+		mx = minf(mx, absf(p[0]))
+	cur_seg = seg if mx < near_x else 0.0
 	var area := 0.0
 	var cen := Vector2.ZERO
 	for i in poly.size():
@@ -226,15 +273,32 @@ func _wall(key: String, a0: Vector2, c0: Vector2, a1: Vector2, c1: Vector2, y0: 
 	if key == "roof":
 		v0 = 0.0
 		v1 = 1.0
-	var vs := [A1, C1, C0, A1, C0, A0]
-	var uvs := [Vector2(u0, v0), Vector2(u1, v0), Vector2(u1, v1), Vector2(u0, v0), Vector2(u1, v1), Vector2(u0, v1)]
+	var uvs := [Vector2(u0, v0), Vector2(u1, v0), Vector2(u1, v1), Vector2(u0, v1)]
 	if photo:
-		uvs = [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 0), Vector2(1, 1), Vector2(0, 1)]
-	for k in 6:
-		st.set_color(col)
-		st.set_normal(nn)
-		st.set_uv(uvs[k])
-		st.add_vertex(vs[k])
+		uvs = [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	if (C0 - A0).dot(Vector3.UP.cross(nn)) < 0.0:
+		uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
+	var nu := 1
+	var nv := 1
+	if cur_seg > 0.0 and key != "roof":
+		nu = maxi(1, ceili(len / cur_seg))
+		nv = maxi(1, ceili((A1.y - A0.y) / cur_seg))
+	for j in nv:
+		for i in nu:
+			var cell := []
+			var cuv := []
+			for k in [Vector2(i, j), Vector2(i + 1, j), Vector2(i + 1, j + 1), Vector2(i, j + 1)]:
+				var s: float = k.x / nu
+				var t: float = k.y / nv
+				var top := A1.lerp(C1, s)
+				var bot := A0.lerp(C0, s)
+				cell.append(top.lerp(bot, t))
+				cuv.append(uvs[0].lerp(uvs[1], s).lerp(uvs[3].lerp(uvs[2], s), t))
+			for k in [0, 1, 2, 0, 2, 3]:
+				st.set_color(col)
+				st.set_normal(nn)
+				st.set_uv(cuv[k])
+				st.add_vertex(cell[k])
 
 
 func _roof(poly: PackedVector2Array, h: float, b: Dictionary) -> void:

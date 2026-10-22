@@ -394,16 +394,56 @@ for s in (226.0, 296.0, 336.0):
 for s in (186.0, 252.0, 352.0):
     post(s, -SW + 0.6, [], ["sign_noparking"])
 
-cars = [(174, -3.3, "car_white"), (182, -3.3, "car_black"), (198, -3.3, "car_silver"), (216, -3.3, "car_white"), (229, -3.3, "car_black"), (251, -3.3, "car_white"),
-        (268, -3.3, "car_silver"), (284, -3.3, "car_white"), (318, -3.3, "car_red"), (330, -3.3, "car_white"), (346, -3.3, "car_silver"), (372, -3.3, "car_black"), (386, -3.3, "car_white"),
-        (224, 3.3, "car_silver"), (344, 3.3, "car_red"), (360, 3.3, "car_white")]
-for i, (s, t, c) in enumerate(cars):
-    car(k, s, t, c, seed=i, flip=t > 0)
-for i, s in enumerate((200.0, 201.2, 202.4)):
-    x, z = frame(s, 3.6)
-    y = road(s, 0)
-    k.box("metal_dark", (x, y + 0.3, z), (1.8, 0.5, 0.4), yaw_of(s), col=None)
-    k.box("car_black", (x, y + 0.7, z), (1.2, 0.35, 0.35), yaw_of(s), col=None)
-
 tris = k.export("rc_rua")
+PK = Kit()
+spots = []
+rng = random.Random(90)
+colors = ["car_white", "car_white", "car_silver", "car_black", "car_silver", "car_red", "car_white", "car_black"]
+
+
+def spot(x, z, fx, fz, kind, street, side, L=4.6):
+    yaw = math.atan2(fx, fz)
+    occ = rng.random() < (0.85 if kind == "car" else 0.9)
+    spots.append({"p": [round(x, 2), round(street_y(x, z) + 0.03, 2), round(z, 2)], "dir": [round(fx, 4), round(fz, 4)], "kind": kind, "len": L, "street": street, "side": side, "occupied": occ})
+    if occ:
+        if kind == "car":
+            car_at(PK, x, z, yaw, colors[len(spots) % len(colors)], seed=len(spots), L=L - rng.uniform(0.2, 0.6))
+        else:
+            moto_at(PK, x, z, yaw)
+
+
+blocked = [(143.0, 172.0), (298.0, 308.0), (398.0, 420.0)]
+for s_e, kind in entries:
+    if kind in ("gate", "guarita", "stairs"):
+        w = {"guarita": 5.0, "stairs": 6.0, "gate": 6.5}[kind]
+        blocked.append((s_e - 1.0, s_e + w + 1.0))
+s = 172.0
+while s < 398.0:
+    if not any(a <= s <= b for a, b in blocked):
+        x, z = frame(s, -RW + 0.95)
+        d = fdir(s)
+        spot(x, z, d[0], d[1], "car", "rio_claro", "right")
+        s += 5.6
+    else:
+        s += 1.0
+for s in (222.0, 228.0, 340.0, 346.0, 358.0, 364.0, 384.0):
+    x, z = frame(s, RW - 0.95)
+    d = fdir(s)
+    spot(x, z, -d[0], -d[1], "car", "rio_claro", "left")
+for i in range(9):
+    s = 198.0 + i * 1.1 + (2.0 if i > 4 else 0.0)
+    x, z = frame(s, RW - 0.9)
+    d = fdir(s)
+    spot(x, z, d[1], -d[0], "moto", "rio_claro", "left", 2.0)
+for sd in (1, -1):
+    u = pm_u0 - 140.0
+    while u < pm_u0 + 140.0:
+        if abs(u - pm_u0) > 16.0:
+            p, d = pm_at(u)
+            n = (-d[1], d[0])
+            x, z = p[0] + n[0] * sd * 4.5, p[1] + n[1] * sd * 4.5
+            spot(x, z, d[0], d[1], "car", "pamplona", "left" if sd > 0 else "right")
+        u += 5.8
+PK.export("rc_parked")
+json.dump({"spots": spots}, open(os.path.join(OUTDIR, "rc_parking.json"), "w"), indent=0)
 json.dump({"range": [137, 420], "replaced": sorted(set(right + low + [127, 128, 133, 112, 114, 119, 109, 110]) | filled_over), "lamps": [list(P(s, -SW + 3.2, 8.5)) for s in (171.0, 236.0, 301.0, 366.0)], "tris": tris}, open(os.path.join(OUTDIR, "rc_rua.json"), "w"))

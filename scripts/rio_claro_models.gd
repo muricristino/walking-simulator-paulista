@@ -13,6 +13,10 @@ var lamps := []
 var ranges := []
 var floor_faces := PackedVector3Array()
 var wall_faces := PackedVector3Array()
+var placeholder_cars := true
+var parked_spots := []
+var parked_root: Node3D
+var placeholders: Node3D
 
 
 func _tex(name: String) -> ImageTexture:
@@ -78,7 +82,50 @@ func build() -> Node3D:
 		inst.free()
 	_body(root, floor_faces, 2)
 	_body(root, wall_faces, 1)
+	_parking(root)
 	return root
+
+
+func _parking(root: Node3D) -> void:
+	var path := ProjectSettings.globalize_path(DIR + "rc_parking.json")
+	if not FileAccess.file_exists(path):
+		return
+	parked_root = Node3D.new()
+	parked_root.name = "ParkedSpots"
+	root.add_child(parked_root)
+	var spots: Array = JSON.parse_string(FileAccess.get_file_as_string(path)).spots
+	for i in spots.size():
+		var q: Dictionary = spots[i]
+		var m := Marker3D.new()
+		m.name = "Spot%03d" % i
+		m.position = Vector3(q.p[0], q.p[1], q.p[2])
+		m.rotation.y = atan2(-float(q.dir[0]), -float(q.dir[1]))
+		for k in ["kind", "len", "street", "side", "occupied"]:
+			m.set_meta(k, q[k])
+		m.add_to_group("parked_spot")
+		parked_root.add_child(m)
+		parked_spots.append(m)
+	if not placeholder_cars or not ResourceLoader.exists(DIR + "rc_parked.glb"):
+		return
+	placeholders = Node3D.new()
+	placeholders.name = "ParkedPlaceholders"
+	root.add_child(placeholders)
+	var keep_floor := floor_faces
+	var keep_wall := wall_faces
+	floor_faces = PackedVector3Array()
+	wall_faces = PackedVector3Array()
+	var inst: Node = (load(DIR + "rc_parked.glb") as PackedScene).instantiate()
+	_walk(inst, placeholders)
+	inst.free()
+	_body(placeholders, wall_faces, 1)
+	floor_faces = keep_floor
+	wall_faces = keep_wall
+
+
+func clear_placeholders() -> void:
+	if placeholders:
+		placeholders.queue_free()
+		placeholders = null
 
 
 func covers(s: float) -> bool:

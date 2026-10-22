@@ -364,11 +364,14 @@ def sbox(kit, mat, s, t, y, size, top=None, col="wall", uvfit=False, tile=None, 
 
 
 def car(kit, s, t, color="car_white", seed=0, flip=False):
-    r = random.Random(seed)
-    L, W = r.uniform(4.0, 4.6), 1.75
     x, z = frame(s, t)
+    car_at(kit, x, z, yaw_of(s) + (math.pi if flip else 0.0), color, seed)
+
+
+def car_at(kit, x, z, yaw, color="car_white", seed=0, L=None):
+    r = random.Random(seed)
+    L, W = L or r.uniform(4.0, 4.6), 1.75
     y = street_y(x, z) + 0.02
-    yaw = yaw_of(s) + (math.pi if flip else 0.0)
     kit.box(color, (x, y + 0.3, z), (W, 0.75, L), yaw, top=color, col="wall", uvfit=True)
     c, sn = math.cos(yaw), math.sin(yaw)
     off = r.uniform(-0.3, 0.1)
@@ -378,6 +381,12 @@ def car(kit, s, t, color="car_white", seed=0, flip=False):
             px = x + sn * dl + c * dw
             pz = z + c * dl - sn * dw
             kit.tube("tire", (px - c * 0.12, y + 0.32, pz + sn * 0.12), (px + c * 0.12, y + 0.32, pz - sn * 0.12), 0.32, 0.32, 6)
+
+
+def moto_at(kit, x, z, yaw):
+    y = street_y(x, z) + 0.02
+    kit.box("metal_dark", (x, y + 0.3, z), (0.4, 0.5, 1.8), yaw, col=None)
+    kit.box("car_black", (x, y + 0.7, z), (0.35, 0.35, 1.2), yaw, col=None)
 
 
 def tower(kit, pts, y0, h, tex, tile=(8.0, 12.0), lobby="glass_dark", lobby_h=4.0):

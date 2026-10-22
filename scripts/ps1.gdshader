@@ -25,8 +25,8 @@ void vertex() {
 
 void fragment() {
 	vec2 uv = mix(UV, aff.xy / aff.z, affine);
-	vec3 c = texture(tex, uv).rgb * tint.rgb;
+	vec3 c = texture(tex, uv).rgb * tint.rgb * COLOR.rgb;
 	ALBEDO = c * (1.0 - unshaded);
-	EMISSION = emit + texture(glow_tex, uv).rgb * glow + c * unshaded;
+	EMISSION = emit + texture(glow_tex, uv).rgb * glow * COLOR.a + c * unshaded;
 	ROUGHNESS = 1.0;
 }

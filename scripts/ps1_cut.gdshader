@@ -27,10 +27,10 @@ void vertex() {
 void fragment() {
 	vec2 uv = mix(UV, aff.xy / aff.z, affine);
 	vec4 t = texture(tex, uv);
-	vec3 c = t.rgb * tint.rgb;
+	vec3 c = t.rgb * tint.rgb * COLOR.rgb;
 	ALPHA = t.a;
 	ALPHA_SCISSOR_THRESHOLD = alpha_cut;
 	ALBEDO = c * (1.0 - unshaded);
-	EMISSION = emit + texture(glow_tex, uv).rgb * glow + c * unshaded;
+	EMISSION = emit + texture(glow_tex, uv).rgb * glow * COLOR.a + c * unshaded;
 	ROUGHNESS = 1.0;
 }

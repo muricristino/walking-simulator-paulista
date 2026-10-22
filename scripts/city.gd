@@ -2,6 +2,7 @@ extends Node
 
 const Tex := preload("res://scripts/tex.gd")
 const Geo := preload("res://scripts/geo.gd")
+const Player := preload("res://scripts/player.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const RES := Vector2i(320, 240)
 const CROSS := [-150.0, -380.0, -560.0]
@@ -15,6 +16,7 @@ var rng := RandomNumberGenerator.new()
 var lamps := 0
 var walls: StaticBody3D
 var floors: StaticBody3D
+var player: CharacterBody3D
 
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	tr.set_anchors_preset(Control.PRESET_FULL_RECT)
 	tr.stretch_mode = TextureRect.STRETCH_SCALE
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(tr)
 	world = Node3D.new()
 	vp.add_child(world)
@@ -597,14 +600,12 @@ func _people() -> void:
 
 
 func _camera() -> void:
-	var cam := Camera3D.new()
-	cam.fov = 62.0
-	cam.near = 0.2
-	cam.far = 900.0
-	cam.position = Vector3(21.5, 2.3, -12.0)
-	world.add_child(cam)
-	cam.look_at(Vector3(-14.0, 12.5, -100.0))
-	cam.current = true
+	var args := OS.get_cmdline_user_args()
+	player = Player.new()
+	player.auto = args.has("--shot")
+	world.add_child(player)
+	player.setup(Vector3(21.5, 0.15, -12.0), Vector3(-14.0, 9.0, -100.0))
+	player.capture(true)
 
 
 func _screen() -> void:

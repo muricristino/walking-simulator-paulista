@@ -4,6 +4,7 @@ const Tex := preload("res://scripts/tex.gd")
 const People := preload("res://scripts/people.gd")
 const PS1 := preload("res://scripts/ps1.gdshader")
 const Geo := preload("res://scripts/geo.gd")
+const Katcho := preload("res://scripts/katcho.gd")
 
 var vp: SubViewport
 var world: Node3D
@@ -18,18 +19,11 @@ var all_walk := false
 var dist := 2.5
 var cam_x := 0.0
 var label: Label
+var katcho := Katcho.new()
 var mode := "proc"
 const MODES := ["proc", "katcho", "wobble"]
 const PACKS := {
-	"katcho": [
-		["res://assets/people/katcho/henry/Henry.dae", "res://assets/people/katcho/henry/HenryTexture512.png"],
-		["res://assets/people/katcho/mob01/mob01.dae", "res://assets/people/katcho/mob01/mob01.png"],
-		["res://assets/people/katcho/beggar/beggar.dae", "res://assets/people/katcho/beggar/beggar1st_x512i24.png"],
-		["res://assets/people/katcho/granny/Granny.dae", "res://assets/people/katcho/granny/granny.png"],
-		["res://assets/people/katcho/gramps/Gramps.dae", "res://assets/people/katcho/gramps/gramps.png"],
-		["res://assets/people/katcho/johndoe/JohnDoe.dae", "res://assets/people/katcho/johndoe/paintSkin04.png"],
-	],
-	"wobble": [
+		"wobble": [
 		["res://assets/people/wobble/PS2CharacterBase.fbx", ""],
 	],
 }
@@ -161,6 +155,9 @@ func _spawn() -> void:
 
 
 func _spawn_pack() -> void:
+	if mode == "katcho":
+		_spawn_katcho()
+		return
 	var list: Array = PACKS[mode]
 	var xs := [-1.2, -0.4, 0.4, 1.2]
 	for i in 4:
@@ -183,15 +180,36 @@ func _spawn_pack() -> void:
 		if i == 3:
 			base = -PI * 0.2
 		var ap: AnimationPlayer = inst.find_child("AnimationPlayer", true, false)
-		var anims := ap.get_animation_list() if ap else PackedStringArray()
-		print("PACK ", e[0], " anims ", anims, " h ", box.size.y)
 		var r := {"root": root, "pack": true, "base": base, "ap": ap, "walk": i == 3}
 		rigs.append(r)
 		_anim(r)
 	_label()
 
 
+func _spawn_katcho() -> void:
+	var list := katcho.variants()
+	var xs := [-1.2, -0.4, 0.4, 1.2]
+	for i in 4:
+		var v: Array = list[(seed + i) % list.size()]
+		var c := katcho.make(v[0], v[1])
+		var root: Node3D = c.root
+		holder.add_child(root)
+		root.position = Vector3(xs[i], 0, 0)
+		var base := 0.0
+		if i == 2:
+			base = PI * 0.5
+		if i == 3:
+			base = -PI * 0.2
+		var r := {"root": root, "pack": true, "base": base, "k": c, "walk": i == 3}
+		rigs.append(r)
+		_anim(r)
+	_label()
+
+
 func _anim(r: Dictionary) -> void:
+	if r.has("k"):
+		katcho.play(r.k, r.walk or all_walk, randf() * 3.0)
+		return
 	var ap: AnimationPlayer = r.ap
 	if not ap:
 		return

@@ -346,7 +346,7 @@ func _floor(x: float, z: float, y := 0.15) -> float:
 
 
 func _free_spot(p: Vector3, r: float) -> bool:
-	if not grid.clear(p.x, p.z, r):
+	if not Layout.is_clear(p.x, p.z, r) or not grid.clear(p.x, p.z, r):
 		return false
 	for q in placed:
 		if Vector2(p.x - q.x, p.z - q.z).length_squared() < 1.0:

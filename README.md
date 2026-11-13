@@ -1,6 +1,6 @@
-# Walking Simulator Paulista
+# Paulista PS1
 
-A PS1-style walking simulator in São Paulo: cross Avenida Paulista at MASP and walk down Alameda Rio Claro, built in Godot from real map data. In game it is called City Look.
+A PS1-style walking simulator in São Paulo: cross Avenida Paulista at MASP and walk down Alameda Rio Claro, built in Godot from real map data.
 
 ![Avenida Paulista at dusk, with MASP on the left and the sign to Alameda Rio Claro](docs/screenshot.png)
 
